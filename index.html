@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transforme | Neural Logistics Platform</title>
+    <meta name="description" content="Advanced logistics management for Transforme Platform.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <style>
+        :root {
+          --plus-blue: #276EF1;
+          --bg-gray: #F6F6F6;
+        }
+        body { 
+          font-family: 'Inter', sans-serif; 
+          background-color: var(--bg-gray);
+          color: #000;
+          overflow-x: hidden;
+          -webkit-font-smoothing: antialiased;
+        }
+
+        .uber-move {
+          letter-spacing: -0.02em;
+        }
+
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer {
+          animation: shimmer 1.5s infinite linear;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .organic-card {
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .organic-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        input:focus, select:focus {
+          outline: 2px solid var(--plus-blue);
+          outline-offset: -2px;
+        }
+    </style>
+</head>
+<body class="selection:bg-plus-blue selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "Remix: delivery plus 3",
+  "description": "Plataforma avanzada de gestión logística con IA multimodal e integración financiera.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone",
+    "camera"
+  ]
+}
