@@ -1,6 +1,6 @@
 import { Pedido, EstadoPedido, SocioRepartidor, Comercio, WeatherNow } from '../types';
 
-const API_BASE_URL = 'http://localhost:5050'; 
+const API_BASE_URL = ''; 
 
 async function fetchWithTimeout(resource: string, options: any = {}, timeout = 2500) {
   const controller = new AbortController();
