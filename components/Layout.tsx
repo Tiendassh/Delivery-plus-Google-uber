@@ -18,7 +18,7 @@ const Estructura: React.FC<Props> = ({ children, pestañaActiva, setPestañaActi
 
   const pestañas = [
     { id: 'tablero', label: 'Menú Principal', icon: '⚡' },
-    { id: 'flutter-vercel', label: 'Landing & QR Code', icon: '🚀' },
+    { id: 'flutter-vercel', label: 'Estrellas del Mes', icon: '🏆' },
     { id: 'comercios-turnos', label: 'Turnos Comercio', icon: '🏢' },
     { id: 'emprendedores', label: 'Emprendedores', icon: '🏠' },
     { id: 'voice-command', label: 'Vendedor IA', icon: '🤖' },
