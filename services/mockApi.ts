@@ -107,6 +107,30 @@ export const mockApi = {
     return newStore;
   },
 
+  createOrder: async (data: Partial<Pedido>) => {
+    const newId = orders.length > 0 ? Math.max(...orders.map(o => Number(o.id) || 1000)) + 1 : 1001;
+    const newOrder: Pedido = {
+      id: newId,
+      nombreCliente: data.nombreCliente || "Cliente Directo",
+      detalles: data.detalles || "Paquete Unitario",
+      estado: data.estado || EstadoPedido.PENDIENTE,
+      idRepartidor: data.idRepartidor || null,
+      monto: data.monto || 1800,
+      latitud: data.latitud || -27.368,
+      longitud: data.longitud || -55.895,
+      latUsuario: data.latUsuario || -27.375,
+      lngUsuario: data.lngUsuario || -55.905,
+      tipoEntrega: 'PAQUETERIA',
+      creadoEn: new Date().toISOString(),
+      historialLegal: [],
+      chatDirecto: [],
+      ...data
+    } as any;
+    orders = [...orders, newOrder];
+    save(STORAGE_KEYS.ORDERS, orders);
+    return newOrder;
+  },
+
   addTransaction: async (tx: Partial<Transaccion>) => {
     const newTx: Transaccion = {
       id: `TX-${Date.now()}`,

@@ -11,6 +11,10 @@ import WalletView from './components/WalletView';
 import AboutUsView from './components/AboutUsView';
 import MobileSimulator from './components/MobileSimulator';
 import LoginView from './components/LoginView';
+import ComerciosTurnosView from './components/ComerciosTurnosView';
+import EmprendedoresView from './components/EmprendedoresView';
+import VercelLandingView from './components/VercelLandingView';
+import InfoLandingView from './components/InfoLandingView';
 import { apiService } from './services/apiService';
 import { notificationService } from './services/notificationService';
 import { Pedido, EstadoPedido, SocioRepartidor, Comercio } from './types';
@@ -96,6 +100,10 @@ const App: React.FC = () => {
           }} 
         />
       )}
+      {pestañaActiva === 'comercios-turnos' && <ComerciosTurnosView />}
+      {pestañaActiva === 'flutter-vercel' && <VercelLandingView />}
+      {pestañaActiva === 'info-landing' && <InfoLandingView />}
+      {pestañaActiva === 'emprendedores' && <EmprendedoresView />}
       {pestañaActiva === 'voice-command' && <VoiceCommandCenter />}
       {pestañaActiva === 'hybrid-support' && <HybridSupportView />}
       {pestañaActiva === 'inscripcion' && <RegistrationZoneView setPestañaActiva={setPestañaActiva} />}

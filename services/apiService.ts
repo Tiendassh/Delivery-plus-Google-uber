@@ -111,5 +111,19 @@ export const apiService = {
       const { mockApi } = await import('./mockApi');
       return mockApi.registerDriver(data);
     }
+  },
+
+  async createOrder(data: any) {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE_URL}/api/v1/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return await res.json();
+    } catch {
+      const { mockApi } = await import('./mockApi');
+      return mockApi.createOrder(data);
+    }
   }
 };

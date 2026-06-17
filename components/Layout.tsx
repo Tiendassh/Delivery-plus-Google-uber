@@ -12,16 +12,20 @@ interface Props {
 }
 
 const Estructura: React.FC<Props> = ({ children, pestañaActiva, setPestañaActiva, toast, onClearToast }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [keyStatus, setKeyStatus] = useState<'ACTIVE' | 'PENDING'>('PENDING');
   const [weather, setWeather] = useState<WeatherNow | null>(null);
 
   const pestañas = [
     { id: 'tablero', label: 'Menú Principal', icon: '⚡' },
+    { id: 'flutter-vercel', label: 'Landing & QR Code', icon: '🚀' },
+    { id: 'comercios-turnos', label: 'Turnos Comercio', icon: '🏢' },
+    { id: 'emprendedores', label: 'Emprendedores', icon: '🏠' },
     { id: 'voice-command', label: 'Vendedor IA', icon: '🤖' },
     { id: 'hybrid-support', label: 'Soporte Real', icon: '🤝' },
     { id: 'inscripcion', label: 'Inscripción', icon: '📝' },
     { id: 'billetera', label: 'Billetera', icon: '💰' },
-    { id: 'quienes-somos', label: 'Quiénes Somos', icon: '🏢' },
+    { id: 'quienes-somos', label: 'Quiénes Somos', icon: '👥' },
   ];
 
   useEffect(() => {
@@ -62,10 +66,38 @@ const Estructura: React.FC<Props> = ({ children, pestañaActiva, setPestañaActi
         </div>
       )}
 
-      <aside className="w-80 bg-black flex flex-col sticky top-0 h-screen z-50 shadow-[20px_0_60px_rgba(0,0,0,0.1)]">
-        <div className="p-12">
-          <h1 className="text-[38px] font-[900] tracking-tighter text-white italic leading-none uppercase">Delivery<span className="text-plus-blue">Plus</span></h1>
-          <p className="text-[8px] font-black uppercase tracking-[0.5em] text-white/30 mt-4 leading-none italic">Neural Logistics Core</p>
+      {/* Hamburguesa floating button on mobile */}
+      <button 
+        onClick={() => setIsOpen(true)}
+        className="md:hidden fixed top-6 left-6 z-40 bg-black text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg border border-white/10 text-xl active:scale-95 transition-all text-center"
+        id="btn-sidebar-open"
+      >
+        ☰
+      </button>
+
+      {isOpen && (
+        <div 
+          onClick={() => setIsOpen(false)}
+          className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm animate-in fade-in duration-300"
+        ></div>
+      )}
+
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-80 bg-black flex flex-col h-screen shadow-[20px_0_60px_rgba(0,0,0,0.1)] transform transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        md:sticky md:top-0 md:translate-x-0
+      `}>
+        <div className="p-12 flex justify-between items-start">
+          <div>
+            <h1 className="text-[38px] font-[900] tracking-tighter text-white italic leading-none uppercase">Delivery<span className="text-plus-blue">Plus</span></h1>
+            <p className="text-[8px] font-black uppercase tracking-[0.5em] text-white/30 mt-4 leading-none italic">Neural Logistics Core</p>
+          </div>
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="md:hidden text-white/40 hover:text-white text-2xl focus:outline-none"
+          >
+            ✕
+          </button>
         </div>
 
         {/* Piloto Paraguas Engine */}
@@ -89,7 +121,10 @@ const Estructura: React.FC<Props> = ({ children, pestañaActiva, setPestañaActi
           {pestañas.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setPestañaActiva(tab.id)}
+              onClick={() => {
+                setPestañaActiva(tab.id);
+                setIsOpen(false);
+              }}
               className={`w-full flex items-center gap-5 px-8 py-5 text-[10px] font-black transition-all group ${
                 pestañaActiva === tab.id 
                   ? 'bg-plus-blue text-white rounded-[2rem] shadow-[0_20px_40px_rgba(37,99,235,0.3)]' 
