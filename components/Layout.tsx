@@ -1,160 +1,139 @@
 
-import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/apiService';
-import { WeatherNow } from '../types';
+import React, { useState } from 'react';
+import { UserRole } from '../types';
+import { Menu, Home, Briefcase, Calendar, Wallet, User, Shield, Package, Store, Bot, X } from 'lucide-react';
 
 interface Props {
   children: React.ReactNode;
-  pestañaActiva: string;
-  setPestañaActiva: (pestaña: string) => void;
-  toast?: { message: string, type: 'error' | 'success' | 'info' } | null;
-  onClearToast?: () => void;
+  activeRole: UserRole;
+  setActiveRole: (role: UserRole) => void;
+  activeView: string;
+  setActiveView: (view: string) => void;
 }
 
-const Estructura: React.FC<Props> = ({ children, pestañaActiva, setPestañaActiva, toast, onClearToast }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [keyStatus, setKeyStatus] = useState<'ACTIVE' | 'PENDING'>('PENDING');
-  const [weather, setWeather] = useState<WeatherNow | null>(null);
+const Layout: React.FC<Props> = ({ children, activeRole, setActiveRole, activeView, setActiveView }) => {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const pestañas = [
-    { id: 'tablero', label: 'Menú Principal', icon: '⚡' },
-    { id: 'flutter-vercel', label: 'Estrellas del Mes', icon: '🏆' },
-    { id: 'comercios-turnos', label: 'Turnos Comercio', icon: '🏢' },
-    { id: 'emprendedores', label: 'Emprendedores', icon: '🏠' },
-    { id: 'voice-command', label: 'Vendedor IA', icon: '🤖' },
-    { id: 'hybrid-support', label: 'Soporte Real', icon: '🤝' },
-    { id: 'inscripcion', label: 'Inscripción', icon: '📝' },
-    { id: 'billetera', label: 'Billetera', icon: '💰' },
-    { id: 'quienes-somos', label: 'Quiénes Somos', icon: '👥' },
+  const roles: { id: UserRole; label: string; icon: any }[] = [
+    { id: 'REPARTIDOR', label: 'Repartidor', icon: Shield },
+    { id: 'COMERCIO', label: 'Comercio', icon: Store },
+    { id: 'EMPRENDEDOR', label: 'Emprendedor', icon: Package },
+    { id: 'ADMINISTRADOR', label: 'Administrador', icon: Briefcase },
+    { id: 'IA_ASISTENTE', label: 'IA Asistente', icon: Bot },
   ];
 
-  useEffect(() => {
-    const checkKey = async () => {
-      if ((window as any).aistudio?.hasSelectedApiKey) {
-        const hasKey = await (window as any).aistudio.hasSelectedApiKey();
-        setKeyStatus(hasKey ? 'ACTIVE' : 'PENDING');
-      }
-    };
-    
-    const updateWeather = async () => {
-      const w = await apiService.fetchWeather(-34.6037, -58.3816);
-      setWeather(w);
-    };
-
-    checkKey();
-    updateWeather();
-    const interval = setInterval(() => {
-      checkKey();
-      updateWeather();
-    }, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleKeyConfig = async () => {
-    if ((window as any).aistudio?.openSelectKey) {
-      await (window as any).aistudio.openSelectKey();
-      setKeyStatus('ACTIVE');
+  const getNavItems = () => {
+    // Base 5 items as requested
+    const items = [
+      { id: 'inicio', label: 'Inicio', icon: Home },
+    ];
+    if (activeRole === 'REPARTIDOR') {
+      items.push({ id: 'trabajos', label: 'Trabajos', icon: Briefcase });
+      items.push({ id: 'turnos', label: 'Turnos', icon: Calendar });
+    } else if (activeRole === 'COMERCIO' || activeRole === 'EMPRENDEDOR') {
+      items.push({ id: 'pedidos', label: 'Pedidos', icon: Package });
+      items.push({ id: 'historial', label: 'Historial', icon: Calendar });
+    } else if (activeRole === 'ADMINISTRADOR') {
+       items.push({ id: 'usuarios', label: 'Usuarios', icon: User });
+       items.push({ id: 'reportes', label: 'Reportes', icon: Calendar });
+    } else if (activeRole === 'IA_ASISTENTE') {
+       items.push({ id: 'chat', label: 'Chat', icon: Bot });
+       items.push({ id: 'consultas', label: 'Consultas', icon: Package });
     }
+    
+    items.push({ id: 'billetera', label: 'Billetera', icon: Wallet });
+    items.push({ id: 'perfil', label: 'Perfil', icon: User });
+    
+    return items.slice(0, 5); // Ensure exactly 5
   };
 
+  const navItems = getNavItems();
+
   return (
-    <div className="flex min-h-screen bg-[#F8F8FA] text-black">
-      {toast && (
-        <div className="fixed top-10 right-10 z-[300] bg-black text-white px-8 py-5 rounded-[2rem] shadow-2xl animate-in slide-in-from-right duration-500 flex items-center gap-4">
-           <span className="text-xl">ℹ️</span>
-           <p className="text-[10px] font-black uppercase tracking-widest">{toast.message}</p>
-        </div>
-      )}
-
-      {/* Hamburguesa floating button on mobile */}
-      <button 
-        onClick={() => setIsOpen(true)}
-        className="md:hidden fixed top-6 left-6 z-40 bg-black text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg border border-white/10 text-xl active:scale-95 transition-all text-center"
-        id="btn-sidebar-open"
-      >
-        ☰
-      </button>
-
-      {isOpen && (
-        <div 
-          onClick={() => setIsOpen(false)}
-          className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm animate-in fade-in duration-300"
-        ></div>
-      )}
-
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-80 bg-black flex flex-col h-screen shadow-[20px_0_60px_rgba(0,0,0,0.1)] transform transition-transform duration-300 ease-in-out
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        md:sticky md:top-0 md:translate-x-0
-      `}>
-        <div className="p-12 flex justify-between items-start">
-          <div>
-            <h1 className="text-[38px] font-[900] tracking-tighter text-white italic leading-none uppercase">Delivery<span className="text-plus-blue">Plus</span></h1>
-            <p className="text-[8px] font-black uppercase tracking-[0.5em] text-white/30 mt-4 leading-none italic">Neural Logistics Core</p>
-          </div>
-          <button 
-            onClick={() => setIsOpen(false)}
-            className="md:hidden text-white/40 hover:text-white text-2xl focus:outline-none"
-          >
-            ✕
+    <div className="flex flex-col min-h-screen bg-dp-background text-dp-text font-sans">
+      
+      {/* Top Header */}
+      <header className="sticky top-0 z-40 bg-dp-surface/80 backdrop-blur-lg border-b border-dp-border px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={() => setIsDrawerOpen(true)} className="p-2 -ml-2 rounded-lg hover:bg-dp-surfaceLight transition-colors">
+            <Menu size={24} className="text-dp-text" />
           </button>
+          <h1 className="text-xl font-poppins font-bold flex items-center gap-2">
+            Delivery<span className="text-dp-primary">Plus</span>
+          </h1>
         </div>
-
-        {/* Piloto Paraguas Engine */}
-        <div className="px-10 mb-8">
-          <div className="bg-white/5 border border-white/10 rounded-[2rem] p-5 backdrop-blur-md">
-             <div className="flex justify-between items-center mb-3">
-                <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.3em]">Weather Pulse</span>
-                <span className={`w-2 h-2 rounded-full ${weather && weather.rainProb > 50 ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`}></span>
-             </div>
-             <div className="flex items-center gap-4">
-                <span className="text-2xl">{weather && weather.rainProb > 50 ? '☔' : '☀️'}</span>
-                <div>
-                   <p className="text-[10px] font-black text-white uppercase italic">{weather?.summary || 'Sincronizando...'}</p>
-                   <p className="text-[8px] font-bold text-white/30 uppercase tracking-widest mt-1">Lluvia: {weather?.rainProb || 0}%</p>
-                </div>
-             </div>
-          </div>
+        <div className="px-3 py-1 bg-dp-surfaceLight border border-dp-border rounded-full text-xs font-semibold text-dp-textMuted flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-dp-success animate-pulse"></span>
+          {roles.find(r => r.id === activeRole)?.label || activeRole}
         </div>
-        
-        <nav className="flex-1 px-6 space-y-2 overflow-y-auto no-scrollbar">
-          {pestañas.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setPestañaActiva(tab.id);
-                setIsOpen(false);
-              }}
-              className={`w-full flex items-center gap-5 px-8 py-5 text-[10px] font-black transition-all group ${
-                pestañaActiva === tab.id 
-                  ? 'bg-plus-blue text-white rounded-[2rem] shadow-[0_20px_40px_rgba(37,99,235,0.3)]' 
-                  : 'text-white/20 hover:text-white'
-              }`}
-            >
-              <span className="text-xl transform group-hover:scale-110 transition-transform">{tab.icon}</span>
-              <span className="uppercase tracking-[0.3em] italic">{tab.label}</span>
-            </button>
-          ))}
-        </nav>
+      </header>
 
-        <div className="p-8 space-y-6">
-          <div className="flex items-center gap-4 p-5 bg-white/5 rounded-[2.5rem] border border-white/5 border-t-white/10">
-            <div className="w-10 h-10 rounded-full bg-plus-blue flex items-center justify-center font-bold text-white shadow-lg italic overflow-hidden border border-white/20">
-               <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Transforme" alt="A" />
+      {/* Side Drawer */}
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsDrawerOpen(false)}></div>
+          <div className="relative w-80 bg-dp-surface h-full flex flex-col border-r border-dp-border animate-in slide-in-from-left duration-300">
+            <div className="p-6 flex justify-between items-center border-b border-dp-border">
+               <h2 className="text-lg font-poppins font-bold text-dp-textMuted">Cambiar Rol</h2>
+               <button onClick={() => setIsDrawerOpen(false)} className="p-2 rounded-lg hover:bg-dp-surfaceLight">
+                 <X size={20} />
+               </button>
             </div>
-            <div>
-              <p className="text-[9px] font-black text-white uppercase tracking-widest leading-none">Core Node</p>
-              <p className="text-[7px] text-plus-blue font-black uppercase tracking-[0.3em] mt-1 italic">Synced v1.0.2</p>
+            <div className="p-4 flex-1 overflow-y-auto space-y-2">
+               {roles.map(role => {
+                 const Icon = role.icon;
+                 const isActive = activeRole === role.id;
+                 return (
+                   <button
+                     key={role.id}
+                     onClick={() => {
+                       setActiveRole(role.id);
+                       setActiveView('inicio');
+                       setIsDrawerOpen(false);
+                     }}
+                     className={`w-full flex items-center gap-4 px-4 py-4 rounded-xl font-medium transition-colors ${
+                       isActive ? 'bg-dp-primary text-white shadow-lg shadow-dp-primary/20 bg-opacity-90' : 'text-dp-textMuted hover:text-white hover:bg-dp-surfaceLight'
+                     }`}
+                   >
+                     <Icon size={20} className={isActive ? "text-white" : "text-dp-textMuted group-hover:text-white"} />
+                     {role.label}
+                   </button>
+                 );
+               })}
             </div>
           </div>
         </div>
-      </aside>
+      )}
 
-      <main className="flex-1 p-10 lg:p-16 max-w-[1800px] mx-auto w-full overflow-x-hidden">
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-x-hidden pb-24">
         {children}
       </main>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-dp-surface/90 backdrop-blur-xl border-t border-dp-border pb-safe">
+        <div className="flex items-center justify-around px-2 py-3 max-w-md mx-auto">
+          {navItems.map(item => {
+            const Icon = item.icon;
+            const isActive = activeView === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveView(item.id)}
+                className={`flex flex-col items-center gap-1 p-2 min-w-[64px] transition-colors ${
+                  isActive ? 'text-dp-primary' : 'text-dp-textMuted hover:text-dp-text'
+                }`}
+              >
+                <Icon size={24} className={isActive ? "fill-dp-primary/20" : ""} />
+                <span className="text-[10px] font-medium mt-1">{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
     </div>
   );
 };
 
-export default Estructura;
+export default Layout;

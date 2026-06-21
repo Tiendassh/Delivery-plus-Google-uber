@@ -6,21 +6,26 @@ declare global {
 }
 
 export enum EstadoPedido {
-  NEW = 'NEW',
   PENDIENTE = 'PENDIENTE',
-  ACCEPTED_BY_BUSINESS = 'ACCEPTED_BY_BUSINESS',
   ACEPTADO = 'ACEPTADO',
-  PREPARING = 'PREPARING',
-  PREPARANDO = 'PREPARANDO',
-  READY_FOR_PICKUP = 'READY_FOR_PICKUP',
-  ASSIGNED_TO_DRIVER = 'ASSIGNED_TO_DRIVER',
-  PICKED_UP = 'PICKED_UP',
-  EN_CAMINO = 'EN_CAMINO',
-  DELIVERED = 'DELIVERED',
+  EN_RETIRO = 'EN RETIRO',
+  EN_CAMINO = 'EN CAMINO',
   ENTREGADO = 'ENTREGADO',
-  CANCELLED = 'CANCELLED',
-  INCIDENT = 'INCIDENT',
-  RETURNED = 'RETURNED'
+  LIQUIDADO = 'LIQUIDADO',
+  CANCELADO = 'CANCELADO',
+  
+  // Compatibilidad hacia atrás
+  NEW = 'PENDIENTE',
+  ACCEPTED_BY_BUSINESS = 'ACEPTADO',
+  PREPARING = 'ACEPTADO',
+  PREPARANDO = 'ACEPTADO',
+  READY_FOR_PICKUP = 'EN RETIRO',
+  ASSIGNED_TO_DRIVER = 'ACEPTADO',
+  PICKED_UP = 'EN RETIRO',
+  DELIVERED = 'ENTREGADO',
+  CANCELLED = 'CANCELADO',
+  INCIDENT = 'CANCELADO',
+  RETURNED = 'CANCELADO'
 }
 
 export enum PlanComercio {
@@ -99,6 +104,8 @@ export interface WeatherNow {
   summary: string;
 }
 
+export type UserRole = 'REPARTIDOR' | 'COMERCIO' | 'EMPRENDEDOR' | 'ADMINISTRADOR' | 'IA_ASISTENTE';
+
 export interface SocioRepartidor {
   id: string | number;
   nombre: string;
@@ -107,7 +114,7 @@ export interface SocioRepartidor {
   puntos: number;
   calificacion: number;
   gananciasSemanales: number;
-  nivel: 'DIAMANTE' | 'PLATINO' | 'ORO' | 'PLATA';
+  nivel: 'DIAMANTE' | 'ORO' | 'PLATA' | 'BRONCE';
   latitud: number;
   longitud: number;
   monotributoActivo: boolean;

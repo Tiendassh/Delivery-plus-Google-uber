@@ -22,8 +22,8 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = ({ pedidos, repa
 
   const stats = useMemo(() => ({
     total: pedidos.length,
-    pending: pedidos.filter(p => p.estado === 'PENDIENTE').length,
-    active: pedidos.filter(p => p.estado === 'EN_CAMINO' || p.estado === 'ACEPTADO').length
+    pending: pedidos.filter(p => p.estado === EstadoPedido.PENDIENTE).length,
+    active: pedidos.filter(p => p.estado === EstadoPedido.EN_CAMINO || p.estado === EstadoPedido.ACEPTADO || p.estado === EstadoPedido.EN_RETIRO || p.estado === (EstadoPedido as any).EN_CAMINO).length
   }), [pedidos]);
 
   const selectedOrder = useMemo(() => 

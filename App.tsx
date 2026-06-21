@@ -1,33 +1,33 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Estructura from './components/Layout';
-import OrderManagementView from './components/OrderManagementView';
-import VoiceCommandCenter from './components/VoiceCommandCenter';
-import HybridSupportView from './components/HybridSupportView';
-import StoreOnboardingView from './components/StoreOnboardingView';
-import DriverOnboardingView from './components/DriverOnboardingView';
-import RegistrationZoneView from './components/RegistrationZoneView';
-import WalletView from './components/WalletView';
-import AboutUsView from './components/AboutUsView';
-import MobileSimulator from './components/MobileSimulator';
+import Layout from './components/Layout';
+import { UserRole } from './types';
 import LoginView from './components/LoginView';
-import ComerciosTurnosView from './components/ComerciosTurnosView';
-import EmprendedoresView from './components/EmprendedoresView';
-import VercelLandingView from './components/VercelLandingView';
-import InfoLandingView from './components/InfoLandingView';
+import { AdminConsoleView } from './components/AdminConsoleView';
+import { RepartidorConsoleView } from './components/RepartidorConsoleView';
+import { ComercioConsoleView } from './components/ComercioConsoleView';
+import { EmprendedorConsoleView } from './components/EmprendedorConsoleView';
+import { AssistantIAView } from './components/AssistantIAView';
+import WalletView from './components/WalletView';
+import MobileSimulator from './components/MobileSimulator';
+import DriverReputationView from './components/DriverReputationView';
+// Additional components as needed
 import { apiService } from './services/apiService';
 import { notificationService } from './services/notificationService';
 import { Pedido, EstadoPedido, SocioRepartidor, Comercio } from './types';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<any>(null);
-  const [pestañaActiva, setPestañaActiva] = useState('tablero');
+  
+  const [activeRole, setActiveRole] = useState<UserRole>('REPARTIDOR');
+  const [activeView, setActiveView] = useState<string>('inicio');
+  
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [repartidores, setRepartidores] = useState<SocioRepartidor[]>([]);
   const [comercios, setComercios] = useState<Comercio[]>([]);
   const [cargando, setCargando] = useState(true);
+  
   const [toast, setToast] = useState<{ message: string, type: 'error' | 'success' | 'info' } | null>(null);
-  const [showSimulator, setShowSimulator] = useState(false);
 
   const fetchData = useCallback(async (isSilent = false) => {
     if (!isSilent) setCargando(true);
@@ -37,12 +37,6 @@ const App: React.FC = () => {
         apiService.getDrivers().catch(() => []),
         apiService.getStores().catch(() => [])
       ]);
-      
-      // Lógica de notificación si cambia el estado del primer pedido (demo)
-      if (pedidos.length > 0 && o.length > 0 && o[0].estado !== pedidos[0].estado) {
-        notificationService.notify("Actualización de Red", `Pedido #${o[0].id} ahora está ${o[0].estado}`);
-      }
-
       setPedidos(o as Pedido[]);
       setRepartidores(d as SocioRepartidor[]);
       setComercios(c as Comercio[]);
@@ -51,7 +45,7 @@ const App: React.FC = () => {
     } finally { 
       setCargando(false); 
     }
-  }, [pedidos]);
+  }, []);
 
   useEffect(() => { 
     if (user) {
@@ -62,78 +56,81 @@ const App: React.FC = () => {
     }
   }, [fetchData, user]);
 
+  const handleUpdateOrderStatus = async (oid: any, status: EstadoPedido) => {
+    try {
+      await apiService.updateOrder(oid, status);
+      setToast({ message: `Pedido ${status}`, type: 'success' });
+      fetchData(true);
+    } catch (err) {
+      setToast({ message: "Error al actualizar", type: 'error' });
+    }
+  };
+
   if (!user) return <LoginView onLogin={setUser} />;
 
   if (cargando && pedidos.length === 0) return (
-    <div className="h-screen bg-black flex flex-col items-center justify-center overflow-hidden">
-      <div className="relative">
-         <h1 className="text-6xl md:text-8xl font-black italic text-white uppercase animate-pulse tracking-tighter relative z-10">Delivery<span className="text-plus-blue">Plus</span></h1>
-         <div className="absolute -inset-10 bg-plus-blue/10 blur-[100px] rounded-full"></div>
-      </div>
-      <div className="mt-12 flex flex-col items-center">
-        <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mb-4">
-           <div className="h-full bg-plus-blue animate-[shimmer_2s_infinite_linear] w-1/3"></div>
-        </div>
-        <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.5em] animate-pulse">Autenticando Nodo Central...</p>
-      </div>
+    <div className="h-screen bg-dp-background flex flex-col items-center justify-center">
+       <h1 className="text-4xl font-black text-white italic animate-pulse">Delivery<span className="text-dp-primary">Plus</span></h1>
     </div>
   );
 
   return (
-    <Estructura 
-      pestañaActiva={pestañaActiva} 
-      setPestañaActiva={setPestañaActiva}
-      toast={toast}
-      onClearToast={() => setToast(null)}
+    <Layout 
+      activeRole={activeRole}
+      setActiveRole={setActiveRole}
+      activeView={activeView}
+      setActiveView={setActiveView}
     >
-      {pestañaActiva === 'tablero' && (
-        <OrderManagementView 
-          pedidos={pedidos} 
-          repartidores={repartidores} 
-          onAssign={(oid, did) => {
-            notificationService.playAlert('success');
-            apiService.assignOrder(oid, did).then(() => fetchData(true));
-          }} 
-          onUpdateStatus={(oid, status) => {
-            notificationService.playAlert('info');
-            apiService.updateOrder(oid, status).then(() => fetchData(true));
-          }} 
-        />
-      )}
-      {pestañaActiva === 'comercios-turnos' && <ComerciosTurnosView />}
-      {pestañaActiva === 'flutter-vercel' && <VercelLandingView />}
-      {pestañaActiva === 'info-landing' && <InfoLandingView />}
-      {pestañaActiva === 'emprendedores' && <EmprendedoresView />}
-      {pestañaActiva === 'voice-command' && <VoiceCommandCenter />}
-      {pestañaActiva === 'hybrid-support' && <HybridSupportView />}
-      {pestañaActiva === 'inscripcion' && <RegistrationZoneView setPestañaActiva={setPestañaActiva} />}
-      {pestañaActiva === 'alta-socio' && <DriverOnboardingView />}
-      {pestañaActiva === 'alta-comercio' && <StoreOnboardingView />}
-      {pestañaActiva === 'billetera' && <WalletView />}
-      {pestañaActiva === 'quienes-somos' && <AboutUsView />}
+      {/* Dynamic Views based on activeView and activeRole */}
+      <div className="p-6">
+        
+        {activeView === 'inicio' && activeRole === 'REPARTIDOR' && (
+          <RepartidorConsoleView
+            pedidos={pedidos}
+            repartidor={repartidores[0] || { id: 'test', nombre: 'Carlos G.', gananciasSemanales: 28400, patente: 'A023BC4', vehiculo: 'Moto Honda', nivel: 'ORO' }}
+            onAcceptOrder={(oid) => {
+              apiService.assignOrder(oid, repartidores[0]?.id || '1').then(() => fetchData(true));
+            }}
+            onAcceptShift={() => {}}
+          />
+        )}
 
-      <button 
-        onClick={() => setShowSimulator(true)}
-        className="fixed bottom-10 right-10 z-[100] bg-black text-white px-8 py-6 rounded-[2.5rem] shadow-2xl font-black uppercase tracking-widest text-xs flex items-center gap-4 hover:scale-105 transition-all border border-white/10"
-      >
-        <span className="text-xl">🛵</span>
-        Simulador
-      </button>
+        {activeView === 'inicio' && activeRole === 'COMERCIO' && (
+          <ComercioConsoleView
+            repartidores={repartidores}
+            onCreatePedido={() => {}}
+            onCreateTurno={() => {}}
+            onContratarRepartidor={() => {}}
+          />
+        )}
+        
+        {activeView === 'inicio' && activeRole === 'EMPRENDEDOR' && (
+          <EmprendedorConsoleView
+            repartidores={repartidores}
+            onCreatePedido={() => {}}
+            onContratarRepartidor={() => {}}
+          />
+        )}
 
-      {repartidores.length > 0 && (
-        <MobileSimulator 
-          isOpen={showSimulator}
-          onClose={() => setShowSimulator(false)}
-          driver={repartidores[0]}
-          activeOrders={pedidos.filter(p => p.estado === EstadoPedido.ACEPTADO || p.estado === EstadoPedido.PENDIENTE)}
-          onOrderAccepted={(id) => apiService.updateOrder(id, EstadoPedido.ACEPTADO).then(() => fetchData(true))}
-          onOrderDelivered={(id) => {
-            notificationService.notify("Pedido Entregado", `El pedido #${id} ha sido completado.`);
-            apiService.updateOrder(id, EstadoPedido.ENTREGADO).then(() => fetchData(true));
-          }}
-        />
-      )}
-    </Estructura>
+        {activeView === 'inicio' && activeRole === 'ADMINISTRADOR' && (
+          <AdminConsoleView 
+            pedidos={pedidos}
+            repartidores={repartidores}
+            onUpdateStatus={handleUpdateOrderStatus}
+          />
+        )}
+        
+        {activeView === 'billetera' && <WalletView />}
+        
+        {activeRole === 'IA_ASISTENTE' && activeView === 'chat' && <AssistantIAView />}
+        
+        {/* Fill other sections smoothly inside the new dark theme */}
+        {activeView === 'perfil' && (
+           <DriverReputationView drivers={repartidores} />
+        )}
+        
+      </div>
+    </Layout>
   );
 };
 

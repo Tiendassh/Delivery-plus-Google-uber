@@ -11,7 +11,8 @@ const BrandingView: React.FC = () => {
   const generateAsset = async (type: 'LOGO' | 'FLYER') => {
     setGenerating(true);
     setError(null);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+    const ai = new GoogleGenAI({ apiKey });
     
     const context = targetStore === 'Delivery Plus' 
       ? "Empresa de logística Delivery Plus Argentina" 

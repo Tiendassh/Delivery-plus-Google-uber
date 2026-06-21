@@ -3,6 +3,7 @@ import { mockApi } from '../services/mockApi';
 import { SocioRepartidor, Comercio } from '../types';
 import InteractiveMap from './InteractiveMap';
 import { notificationService } from '../services/notificationService';
+import VendedorIAChat from './VendedorIAChat';
 
 interface ContractedShift {
   id: string;
@@ -27,6 +28,34 @@ const ComerciosTurnosView: React.FC = () => {
   const [shiftTime, setShiftTime] = useState<string>('MAÑANA (08:00 - 12:00)');
   const [contractedShifts, setContractedShifts] = useState<ContractedShift[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [showIaChat, setShowIaChat] = useState<boolean>(false);
+  const [narratorVoice, setNarratorVoice] = useState<'carlos' | 'agustina' | 'vendedor_bot'>('carlos');
+
+  // Reproductor Azure Speech o SpeechSynthesis nativo es-AR
+  const speakWithAzure = async (text: string, voiceProfile: 'carlos' | 'agustina' | 'vendedor_bot' = 'carlos') => {
+    try {
+      const response = await fetch('/api/elevenlabs/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voiceProfile })
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        await audio.play();
+      } else {
+        throw new Error();
+      }
+    } catch (err) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-AR';
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,6 +141,9 @@ const ComerciosTurnosView: React.FC = () => {
          detalle: `Contrato de turno (${hours}hs) para ${storeObj.nombre}`
        });
 
+      const confirmText = `¡Listo, mirá! Contrataste la cobertura exclusiva de ${hours} horas para ${storeObj.nombre}. El repartidor ${driverObj.nombre} ya quedó asignado a tu local.`;
+      speakWithAzure(confirmText, narratorVoice);
+
       notificationService.notify(
         "Turno Contratado Exitosamente",
         `El chofer ${driverObj.nombre} quedará asignado al comercio durante su turno.`
@@ -166,12 +198,26 @@ const ComerciosTurnosView: React.FC = () => {
               Turnos <span className="text-plus-blue">Exclusivos</span>
             </h2>
             <p className="text-slate-400 mt-4 text-sm max-w-xl font-medium">
-              Contrata repartidores de forma exclusiva por bloques de 4 u 8 horas para tu comercio. Cubre tus picos de demanda con un costo fijo asegurado.
+              Contrata repartidores de forma exclusiva por bloques de 4 u 8 horas para tu comercio. Cubre tus picos de demanda con un costo fijo asegurado e indicaciones de voz con acento es-AR.
             </p>
           </div>
-          <div className="bg-white/5 px-8 py-6 rounded-[2.5rem] border border-white/10 backdrop-blur-md">
-            <p className="text-[8px] font-black opacity-30 uppercase tracking-widest mb-1">Precio Por Bloque</p>
-            <p className="text-2xl font-black text-plus-blue italic">$14.000 / $25.000</p>
+          <div className="bg-white/5 px-8 py-6 rounded-[2.5rem] border border-white/10 backdrop-blur-md flex flex-col gap-2">
+            <div>
+              <p className="text-[8px] font-black opacity-30 uppercase tracking-widest mb-1 font-bold">Precio Por Bloque</p>
+              <p className="text-xl font-black text-plus-blue italic">$14.000 / $25.000</p>
+            </div>
+            <div className="border-t border-white/10 pt-2 flex items-center justify-between gap-4">
+              <span className="text-[8px] text-white/40 uppercase font-black">Voz Narrador:</span>
+              <select
+                value={narratorVoice}
+                onChange={(e) => setNarratorVoice(e.target.value as any)}
+                className="bg-black text-white text-[9px] border-none font-bold outline-none cursor-pointer rounded-lg p-1 uppercase"
+              >
+                <option value="carlos">Carlos 🗣️</option>
+                <option value="agustina">Agustina 🗣️</option>
+                <option value="vendedor_bot">Bot 🗣️</option>
+              </select>
+            </div>
           </div>
         </div>
         <div className="absolute -bottom-20 -right-20 text-[20rem] opacity-[0.02] font-black pointer-events-none italic">4HS</div>
@@ -299,11 +345,20 @@ const ComerciosTurnosView: React.FC = () => {
                     <p className="text-sm font-black uppercase text-gray-900">{sh.storeName}</p>
                     <p className="text-[9px] font-bold text-gray-500 uppercase mt-0.5">Asignado: {sh.driverName} ({sh.hours} Horas)</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-black italic text-gray-900">${sh.price.toLocaleString()}</p>
-                    <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">
-                      ● Cobertura Activa
-                    </span>
+                  <div className="text-right flex items-center gap-4">
+                    <div>
+                      <p className="text-lg font-black italic text-gray-900">${sh.price.toLocaleString()}</p>
+                      <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">
+                        ● Cobertura Activa
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => speakWithAzure(`Contrato de turno ${sh.id} para ${sh.storeName} por ${sh.hours} horas con el chofer ${sh.driverName}.`, narratorVoice)}
+                      className="w-10 h-10 rounded-full border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-xs shadow-sm active:scale-90 transition-all"
+                      title="Escuchar detalles del turno..."
+                    >
+                      🔊
+                    </button>
                   </div>
                 </div>
               ))}
@@ -317,6 +372,37 @@ const ComerciosTurnosView: React.FC = () => {
 
         </div>
 
+      </div>
+
+      {/* Sección del Vendedor IA Integrada (Chat de Texto y Voz) */}
+      <div className="border-t border-black/5 pt-12">
+        <div className="bg-[#050505] p-10 md:p-12 rounded-[4rem] border border-white/5 shadow-2xl text-white mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+              <span className="px-3 py-1 bg-plus-blue/15 text-plus-blue font-black text-[8px] uppercase tracking-[0.2em] rounded-md border border-plus-blue/10">
+                PROBAR VOCES Y NEGOCIAR EN VIVO
+              </span>
+              <h3 className="text-3xl font-black italic uppercase italic tracking-tight mt-3">
+                ¿Querés probar las voces del Vendedor IA? 🎙️
+              </h3>
+              <p className="text-white/40 text-xs font-semibold mt-2 max-w-xl leading-relaxed">
+                Desplegá el chat interactivo para negociar fletes o entablar una conversación fluida con Carlos, Agustina o el robot con acento argentino es-AR nativo, tanto escribiendo como enviando tu audio de voz.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowIaChat(!showIaChat)}
+              className="px-8 py-4 bg-plus-blue hover:bg-blue-600 font-black text-[10px] uppercase tracking-wider text-white rounded-2xl transition-all shadow-lg active:scale-95"
+            >
+              {showIaChat ? 'Ocultar Chat de Voces' : 'Abrir Chat de Voces [es-AR]'}
+            </button>
+          </div>
+        </div>
+
+        {showIaChat && (
+          <div className="animate-in slide-in-from-bottom duration-500">
+            <VendedorIAChat />
+          </div>
+        )}
       </div>
 
     </div>

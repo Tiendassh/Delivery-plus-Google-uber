@@ -11,7 +11,8 @@ export interface ChatMessage {
 
 export const getLogisticsInsights = async (summary: string) => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: FLASH_MODEL,
       contents: `Contexto: ${summary}. Genera una observación ejecutiva de máximo 15 palabras. No uses markdown, solo texto plano.`,
@@ -31,7 +32,8 @@ export const getLogisticsInsights = async (summary: string) => {
 
 export const chatWithStrategist = async (history: ChatMessage[], message: string) => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+    const ai = new GoogleGenAI({ apiKey });
     const chat = ai.chats.create({
       model: PRO_MODEL,
       config: {

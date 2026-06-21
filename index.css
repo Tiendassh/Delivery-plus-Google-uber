@@ -1,3 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-dp-background text-dp-text font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-poppins;
+  }
+}
+
+@layer components {
+  .dp-card {
+    @apply bg-dp-surface border border-dp-border rounded-[20px];
+  }
+  
+  .dp-button {
+    @apply bg-dp-primary text-white rounded-[14px] h-[52px] font-semibold flex items-center justify-center px-6 hover:opacity-90 transition-opacity active:scale-[0.98];
+  }
+  
+  .dp-button-secondary {
+    @apply bg-dp-surfaceLight border border-dp-border text-dp-text rounded-[14px] h-[52px] font-semibold flex items-center justify-center px-6 hover:bg-dp-border transition-colors active:scale-[0.98];
+  }
+}

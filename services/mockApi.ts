@@ -64,12 +64,44 @@ export const mockApi = {
   getTransactions: async () => [...transactions],
 
   assignOrder: async (orderId: number, driverId: number) => {
+    const order = orders.find(o => Number(o.id) === orderId);
+    if (order && order.estado !== EstadoPedido.PENDIENTE) {
+      throw new Error(`TRANSICION_INVALIDA: Solo se pueden asignar pedidos en estado PENDIENTE.`);
+    }
     orders = orders.map(o => Number(o.id) === orderId ? { ...o, estado: EstadoPedido.ACEPTADO, idRepartidor: driverId } : o) as Pedido[];
     save(STORAGE_KEYS.ORDERS, orders);
     return orders.find(o => Number(o.id) === orderId);
   },
 
   updateOrderStatus: async (orderId: number, estado: EstadoPedido) => {
+    const order = orders.find(o => Number(o.id) === orderId);
+    if (!order) return null;
+
+    const current = order.estado;
+    const next = estado;
+
+    const isValid = (c: string, n: string): boolean => {
+      if (c === n) return true;
+      switch (c) {
+        case 'PENDIENTE':
+          return n === 'ACEPTADO' || n === 'CANCELADO';
+        case 'ACEPTADO':
+          return n === 'EN RETIRO' || n === 'CANCELADO';
+        case 'EN RETIRO':
+          return n === 'EN CAMINO' || n === 'CANCELADO';
+        case 'EN CAMINO':
+          return n === 'ENTREGADO';
+        case 'ENTREGADO':
+          return n === 'LIQUIDADO';
+        default:
+          return false;
+      }
+    };
+
+    if (!isValid(current, next)) {
+      throw new Error(`TRANSICION_INVALIDA: No se permite saltar estados. Intento de pasar de "${current}" a "${next}".`);
+    }
+
     orders = orders.map(o => Number(o.id) === orderId ? { ...o, estado } : o) as Pedido[];
     save(STORAGE_KEYS.ORDERS, orders);
     return orders.find(o => Number(o.id) === orderId);

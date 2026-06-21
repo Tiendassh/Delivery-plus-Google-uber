@@ -9,7 +9,8 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      'process.env.API_KEY': JSON.stringify(env.API_KEY || ''),
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || env.GEMINI_API_KEY || ''),
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.API_KEY || ''),
       'process.env.API_BASE_URL': JSON.stringify(env.API_BASE_URL || ''),
       'process.env.MERCADOPAGO_PUBLIC_KEY': JSON.stringify(env.MERCADOPAGO_PUBLIC_KEY || 'APP_USR-53816ce6-db4e-44ce-9617-be591d0b61ed'),
       'process.env.MERCADOPAGO_ACCESS_TOKEN': JSON.stringify(env.MERCADOPAGO_ACCESS_TOKEN || 'APP_USR-3935114367490901-012801-37187df83856a1dab6590347bbf9c58b-188695400'),

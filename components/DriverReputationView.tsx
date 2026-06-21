@@ -1,62 +1,156 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SocioRepartidor } from '../types';
+import { Shield, TrendingUp, Award, Clock, Star, Activity, AlertTriangle } from 'lucide-react';
 
 interface DriverReputationViewProps {
   drivers: SocioRepartidor[];
 }
 
-const DriverReputationView: React.FC<DriverReputationViewProps> = ({ drivers }) => {
+export const DriverReputationView: React.FC<DriverReputationViewProps> = ({ drivers }) => {
+
+  // Simulate metrics for each driver to show the formula
+  const reputationData = useMemo(() => {
+    return drivers.map((driver, index) => {
+      // Use driver.id or index to deterministically generate stats
+      const baseSeed = (typeof driver.id === 'number' ? driver.id : index) * 13;
+      
+      const cumplimiento = 80 + (baseSeed % 20); // 80 - 100
+      const puntualidad = 75 + (baseSeed % 25); // 75 - 100
+      const valoracion = (driver.calificacion / 5) * 100; // 0 - 100
+      const experiencia = Math.min(100, 50 + (driver.gananciasSemanales / 1000) * 5); // 50 - 100
+      const incidencias = 100 - (baseSeed % 15); // 85 - 100 (100 means no incidents)
+
+      const finalScore = 
+        (cumplimiento * 0.40) +
+        (puntualidad * 0.25) +
+        (valoracion * 0.20) +
+        (experiencia * 0.10) +
+        (incidencias * 0.05);
+
+      let computedLevel: 'BRONCE' | 'PLATA' | 'ORO' | 'DIAMANTE' = 'BRONCE';
+      let accentColor = 'from-amber-600 to-amber-800';
+      let badgeBg = 'bg-amber-100 text-amber-800 border-amber-200';
+
+      if (finalScore >= 92) {
+        computedLevel = 'DIAMANTE';
+        accentColor = 'from-indigo-400 to-cyan-400';
+        badgeBg = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+      } else if (finalScore >= 85) {
+        computedLevel = 'ORO';
+        accentColor = 'from-yellow-400 to-amber-500';
+        badgeBg = 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      } else if (finalScore >= 75) {
+        computedLevel = 'PLATA';
+        accentColor = 'from-slate-400 to-slate-500';
+        badgeBg = 'bg-slate-100 text-slate-700 border-slate-300';
+      }
+
+      return {
+        ...driver,
+        metrics: { cumplimiento, puntualidad, valoracion, experiencia, incidencias, finalScore },
+        computedLevel,
+        accentColor,
+        badgeBg
+      };
+    }).sort((a, b) => b.metrics.finalScore - a.metrics.finalScore);
+  }, [drivers]);
+
   return (
-    <div className="space-y-16 animate-in fade-in duration-700">
-      <header className="flex flex-col md:flex-row justify-between items-end gap-8 bg-white p-14 rounded-[5rem] shadow-sm border border-slate-100 text-black">
+    <div className="space-y-12 animate-in fade-in duration-700">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-12 rounded-[4rem] shadow-sm border border-slate-100">
         <div>
-          <h2 className="text-7xl font-black tracking-tighter leading-none">Calidad de Red</h2>
-          <p className="text-slate-400 mt-6 text-2xl font-medium italic">Scoring de cumplimiento y reputación de socios</p>
+          <span className="px-3 py-1 bg-black text-white font-black text-[8px] uppercase tracking-[0.2em] rounded-md">
+            Capítulo 6
+          </span>
+          <h2 className="text-5xl lg:text-7xl font-black tracking-tighter leading-none mt-4">
+            Sistema de <span className="text-plus-blue">Reputación</span>
+          </h2>
+          <p className="text-slate-400 mt-4 text-xl font-medium italic">Scoring logístico multivariable para asignar prioridad de viajes</p>
         </div>
-        <div className="px-8 py-4 bg-black text-white rounded-full font-black text-xs uppercase tracking-widest">
-           Media Argentina: 4.8 ★
+        
+        <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 text-xs font-semibold w-full md:w-auto">
+          <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-3">Fórmula del Algoritmo</p>
+          <div className="space-y-2">
+             <div className="flex justify-between gap-4"><span className="text-slate-500">Cumplimiento</span> <span className="font-black">40%</span></div>
+             <div className="flex justify-between gap-4"><span className="text-slate-500">Puntualidad</span> <span className="font-black">25%</span></div>
+             <div className="flex justify-between gap-4"><span className="text-slate-500">Valoración</span> <span className="font-black">20%</span></div>
+             <div className="flex justify-between gap-4"><span className="text-slate-500">Experiencia</span> <span className="font-black">10%</span></div>
+             <div className="flex justify-between gap-4"><span className="text-slate-500">Control Incidencias</span> <span className="font-black">5%</span></div>
+          </div>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 text-black">
-        {drivers.map(driver => (
-          <div key={driver.id} className="bg-white p-12 rounded-[5rem] border border-slate-100 shadow-sm group hover:-translate-y-2 transition-all duration-500">
-             <div className="flex items-center gap-6 mb-10">
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${driver.nombre}`} className="w-20 h-20 rounded-full bg-slate-50 p-1 border-2 border-slate-100" alt="socio" />
-                <div>
-                   <h4 className="text-2xl font-black tracking-tight">{driver.nombre}</h4>
-                   <p className="text-blue-600 font-black text-[10px] uppercase tracking-widest italic">Socio {driver.nivel}</p>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {reputationData.map(driver => (
+          <div key={driver.id} className="bg-white p-8 lg:p-10 rounded-[3.5rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:border-black/5 transition-colors">
+             
+             {/* Gradient Accent Bar */}
+             <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${driver.accentColor}`}></div>
+
+             <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-10">
+                <div className="flex items-center gap-5">
+                   <div className="relative">
+                      <div className={`absolute inset-0 bg-gradient-to-r ${driver.accentColor} rounded-full blur-md opacity-20`}></div>
+                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${driver.nombre}`} className="w-20 h-20 rounded-full bg-slate-50 relative z-10 border-2 border-white shadow-sm" alt={driver.nombre} />
+                      <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-white bg-gradient-to-br ${driver.accentColor} border-2 border-white shadow-md z-20`}>
+                        <Shield size={14} />
+                      </div>
+                   </div>
+                   <div>
+                      <h4 className="text-2xl font-black tracking-tight uppercase italic">{driver.nombre}</h4>
+                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border mt-2 text-[9px] font-black uppercase tracking-widest ${driver.badgeBg}`}>
+                        <TrendingUp size={10} /> {driver.computedLevel}
+                      </div>
+                   </div>
+                </div>
+                
+                <div className="text-right">
+                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Score Global</p>
+                   <p className="text-5xl font-black italic tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-black to-slate-500">
+                     {driver.metrics.finalScore.toFixed(1)}
+                   </p>
                 </div>
              </div>
 
-             <div className="grid grid-cols-2 gap-4 mb-10">
-                <div className="bg-slate-50 p-6 rounded-3xl">
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Puntaje</p>
-                   <p className="text-3xl font-black">⭐ {driver.calificacion.toFixed(1)}</p>
+             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="bg-slate-50 rounded-2xl p-4 flex flex-col justify-between">
+                   <div className="flex items-center gap-2 mb-3">
+                      <Award size={12} className="text-slate-400" />
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Cumplim.</span>
+                   </div>
+                   <p className="text-lg font-black">{driver.metrics.cumplimiento.toFixed(0)} <span className="text-xs text-slate-400 font-medium">/ 100</span></p>
                 </div>
-                <div className="bg-slate-50 p-6 rounded-3xl">
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Reseñas</p>
-                   <p className="text-3xl font-black">{driver.reseñas?.length || 0}</p>
+                <div className="bg-slate-50 rounded-2xl p-4 flex flex-col justify-between">
+                   <div className="flex items-center gap-2 mb-3">
+                      <Clock size={12} className="text-slate-400" />
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Puntual.</span>
+                   </div>
+                   <p className="text-lg font-black">{driver.metrics.puntualidad.toFixed(0)} <span className="text-xs text-slate-400 font-medium">/ 100</span></p>
+                </div>
+                <div className="bg-slate-50 rounded-2xl p-4 flex flex-col justify-between">
+                   <div className="flex items-center gap-2 mb-3">
+                      <Star size={12} className="text-slate-400" />
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Valorac.</span>
+                   </div>
+                   <p className="text-lg font-black">{driver.metrics.valoracion.toFixed(0)} <span className="text-xs text-slate-400 font-medium">/ 100</span></p>
+                </div>
+                <div className="bg-slate-50 rounded-2xl p-4 flex flex-col justify-between">
+                   <div className="flex items-center gap-2 mb-3">
+                      <Activity size={12} className="text-slate-400" />
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Exper.</span>
+                   </div>
+                   <p className="text-lg font-black">{driver.metrics.experiencia.toFixed(0)} <span className="text-xs text-slate-400 font-medium">/ 100</span></p>
+                </div>
+                <div className="bg-slate-50 rounded-2xl p-4 flex flex-col justify-between col-span-2 md:col-span-1">
+                   <div className="flex items-center gap-2 mb-3">
+                      <AlertTriangle size={12} className="text-slate-400" />
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Incidenc.</span>
+                   </div>
+                   <p className="text-lg font-black">{driver.metrics.incidencias.toFixed(0)} <span className="text-xs text-slate-400 font-medium">/ 100</span></p>
                 </div>
              </div>
 
-             <div className="space-y-4">
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4 px-2">Cumplimiento Legal</p>
-                <div className="flex justify-between px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl">
-                   <span className="text-[10px] font-black uppercase">Monotributo</span>
-                   <span className="text-[10px] font-black">{driver.monotributoActivo ? 'OK' : 'PENDIENTE'}</span>
-                </div>
-                <div className="flex justify-between px-4 py-2 bg-blue-50 text-blue-600 rounded-xl">
-                   <span className="text-[10px] font-black uppercase">Seguro Vida</span>
-                   <span className="text-[10px] font-black">VIGENTE</span>
-                </div>
-             </div>
-
-             <div className="mt-10 pt-10 border-t border-slate-50">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 italic">Última Devolución</p>
-                <p className="text-sm font-bold text-slate-900 leading-relaxed truncate">"{driver.reseñas?.[0]?.comentario || 'Sin comentarios aún'}"</p>
-             </div>
           </div>
         ))}
       </div>
@@ -65,3 +159,4 @@ const DriverReputationView: React.FC<DriverReputationViewProps> = ({ drivers }) 
 };
 
 export default DriverReputationView;
+

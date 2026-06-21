@@ -11,13 +11,14 @@ interface PropiedadesSimulador {
   activeOrders: Pedido[];
   onOrderAccepted?: (orderId: string | number) => void;
   onOrderDelivered?: (orderId: string | number) => void;
+  onUpdateStatus?: (orderId: any, status: EstadoPedido) => Promise<void>;
 }
 
 type AppState = 'OFFLINE' | 'ONLINE' | 'ON_TRIP' | 'CHAT';
 type TripPhase = 'TO_PICKUP' | 'TO_DELIVERY' | 'ARRIVED';
 
 const MobileSimulator: React.FC<PropiedadesSimulador> = ({ 
-  isOpen, onClose, driver, activeOrders, onOrderAccepted, onOrderDelivered
+  isOpen, onClose, driver, activeOrders, onOrderAccepted, onOrderDelivered, onUpdateStatus
 }) => {
   const [appState, setAppState] = useState<AppState>('OFFLINE');
   const [tripPhase, setTripPhase] = useState<TripPhase>('TO_PICKUP');
@@ -79,18 +80,51 @@ const MobileSimulator: React.FC<PropiedadesSimulador> = ({
     setInputText('');
   };
 
+  const liveOrder = currentOrder ? activeOrders.find(o => String(o.id) === String(currentOrder.id)) || currentOrder : null;
+
   const handleAccept = (order: Pedido) => {
     setCurrentOrder(order);
     setAppState('ON_TRIP');
     setTripPhase('TO_PICKUP');
-    if (onOrderAccepted) onOrderAccepted(order.id);
+    if (onUpdateStatus) {
+      onUpdateStatus(order.id, EstadoPedido.ACEPTADO).catch(() => {});
+    } else if (onOrderAccepted) {
+      onOrderAccepted(order.id);
+    }
   };
 
-  const handleComplete = () => {
-    if (onOrderDelivered && currentOrder) onOrderDelivered(currentOrder.id);
-    setCurrentOrder(null);
-    setAppState('ONLINE');
-    setTripPhase('TO_PICKUP');
+  const handleStepStatus = () => {
+    if (!liveOrder) return;
+    const currentStatus = liveOrder.estado;
+    let nextStatus: EstadoPedido | null = null;
+
+    if (currentStatus === EstadoPedido.ACEPTADO) {
+      nextStatus = EstadoPedido.EN_RETIRO;
+    } else if (currentStatus === EstadoPedido.EN_RETIRO) {
+      nextStatus = EstadoPedido.EN_CAMINO;
+    } else if (currentStatus === EstadoPedido.EN_CAMINO) {
+      nextStatus = EstadoPedido.ENTREGADO;
+    } else if (currentStatus === EstadoPedido.ENTREGADO) {
+      nextStatus = EstadoPedido.LIQUIDADO;
+    }
+
+    if (nextStatus && onUpdateStatus) {
+      onUpdateStatus(liveOrder.id, nextStatus).then(() => {
+        if (nextStatus === EstadoPedido.LIQUIDADO) {
+          setCurrentOrder(null);
+          setAppState('ONLINE');
+          setTripPhase('TO_PICKUP');
+        }
+      }).catch(err => {
+        alert(err.message || 'Transición denegada.');
+      });
+    } else {
+      // Fallback
+      if (onOrderDelivered) onOrderDelivered(liveOrder.id);
+      setCurrentOrder(null);
+      setAppState('ONLINE');
+      setTripPhase('TO_PICKUP');
+    }
   };
 
   return (
@@ -171,28 +205,69 @@ const MobileSimulator: React.FC<PropiedadesSimulador> = ({
              )}
 
              {/* On Trip Actions */}
-             {appState === 'ON_TRIP' && currentOrder && (
+             {appState === 'ON_TRIP' && liveOrder && (
                 <div className="p-4 pointer-events-auto animate-in slide-in-from-bottom duration-500">
-                   <div className="bg-white p-8 rounded-[3rem] shadow-2xl">
-                      <div className="flex items-center justify-between mb-8">
+                   <div className="bg-white p-8 rounded-[3rem] shadow-2xl space-y-4">
+                      <div className="flex items-center justify-between">
                          <div className="flex items-center gap-4">
                             <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center text-3xl overflow-hidden">
-                               <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentOrder.nombreCliente}`} alt="u" />
+                               <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${liveOrder.nombreCliente}`} alt="u" />
                             </div>
                             <div>
-                               <h4 className="text-lg font-black uppercase italic">{currentOrder.nombreCliente}</h4>
-                               <p className="text-[9px] font-black text-blue-600 uppercase mt-1">{tripPhase}</p>
+                               <h4 className="text-lg font-black uppercase italic leading-none mb-1">{liveOrder.nombreCliente}</h4>
+                               <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-extrabold uppercase rounded">
+                                 {liveOrder.estado}
+                               </span>
                             </div>
                          </div>
                          <button onClick={() => setAppState('CHAT')} className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-xl">💬</button>
                       </div>
-                      <button 
-                        onClick={handleComplete}
-                        disabled={tripPhase !== 'ARRIVED'}
-                        className={`w-full py-6 rounded-2xl font-black uppercase tracking-widest transition-all ${tripPhase === 'ARRIVED' ? 'bg-black text-white' : 'bg-slate-100 text-slate-400'}`}
-                      >
-                        {tripPhase === 'ARRIVED' ? 'Confirmar Entrega' : 'En camino...'}
-                      </button>
+
+                      <div className="bg-slate-50 p-4 rounded-xl border text-[9px] font-bold text-slate-500 uppercase leading-snug">
+                         📍 Fase: {tripPhase === 'TO_PICKUP' ? 'Yendo al Comercio' : tripPhase === 'TO_DELIVERY' ? 'En viaje al Destinatario' : 'Llegaste al punto de entrega'}
+                      </div>
+
+                      {liveOrder.estado === EstadoPedido.ACEPTADO && (
+                        <button 
+                          onClick={() => {
+                            if (onUpdateStatus) onUpdateStatus(liveOrder.id, EstadoPedido.EN_RETIRO);
+                            setTripPhase('TO_DELIVERY');
+                          }}
+                          className="w-full py-5 rounded-2xl bg-black hover:bg-slate-800 text-white font-black uppercase tracking-wider text-xs"
+                        >
+                          Llegué a Comercio ➔
+                        </button>
+                      )}
+
+                      {liveOrder.estado === EstadoPedido.EN_RETIRO && (
+                        <button 
+                          onClick={() => {
+                            if (onUpdateStatus) onUpdateStatus(liveOrder.id, EstadoPedido.EN_CAMINO);
+                            setTripPhase('ARRIVED');
+                          }}
+                          className="w-full py-5 rounded-2xl bg-black hover:bg-slate-800 text-white font-black uppercase tracking-wider text-xs"
+                        >
+                          Retirar Paquete e Iniciar Viaje ➔
+                        </button>
+                      )}
+
+                      {liveOrder.estado === EstadoPedido.EN_CAMINO && (
+                        <button 
+                          onClick={handleStepStatus}
+                          className="w-full py-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-wider text-xs shadow-lg shadow-emerald-600/20"
+                        >
+                          Confirmar Entrega ➔
+                        </button>
+                      )}
+
+                      {liveOrder.estado === EstadoPedido.ENTREGADO && (
+                        <button 
+                          onClick={handleStepStatus}
+                          className="w-full py-5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-wider text-xs shadow-lg shadow-indigo-600/20 animate-pulse"
+                        >
+                          Solicitar Liquidación Viáticos ➔
+                        </button>
+                      )}
                    </div>
                 </div>
              )}

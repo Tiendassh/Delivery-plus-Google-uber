@@ -128,49 +128,105 @@ app.get('/api/v1/weather/now', async (req, res) => {
   }
 });
 
-// --- ELEVENLABS VOICE SYNTHESIS PROXY ---
-app.post('/api/voice/tts', async (req, res) => {
-  const { text, voiceId } = req.body;
-  const apiKey = process.env.ELEVENLABS_API_KEY;
-  const selectedVoiceId = voiceId || process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM'; // Rachel default voice ID
+// --- AZURE COGNITIVE SERVICES TTS PROXY ---
+app.post('/api/elevenlabs/tts', async (req, res) => {
+  const { text, voiceProfile } = req.body;
+  const apiKey = process.env.AZURE_SPEECH_KEY;
+  const region = process.env.AZURE_SPEECH_REGION || 'eastus';
 
   if (!apiKey || apiKey.trim() === '') {
-    return res.status(400).json({ error: 'La API Key de ElevenLabs no está configurada.' });
+    return res.status(400).json({ error: 'La API Key de Azure Speech no está configurada.' });
   }
 
   if (!text) {
     return res.status(400).json({ error: 'Se requiere el campo "text"' });
   }
 
+  // Voces de Azure argentino (es-AR) por perfil
+  // carlos -> es-AR-TomasNeural
+  // agustina -> es-AR-ElenaNeural
+  // vendedor_bot -> es-AR-TomasNeural
+  let azureVoice = 'es-AR-TomasNeural';
+  if (voiceProfile === 'agustina') {
+    azureVoice = 'es-AR-ElenaNeural';
+  }
+
   try {
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
+    const ssml = `<speak version='1.0' xml:lang='es-AR'>
+  <voice name='${azureVoice}'>${text}</voice>
+</speak>`;
+
+    const response = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
       method: 'POST',
       headers: {
-        'xi-api-key': apiKey,
-        'Content-Type': 'application/json',
-        'accept': 'audio/mpeg'
+        'Ocp-Apim-Subscription-Key': apiKey,
+        'Content-Type': 'application/ssml+xml',
+        'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3',
+        'User-Agent': 'DeliveryPlus-AzureSpeechClient'
       },
-      body: JSON.stringify({
-        text,
-        model_id: 'eleven_monolingual_v1',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75
-        }
-      })
+      body: ssml
     });
 
     if (!response.ok) {
-      const errorResponse = await response.text();
-      throw new Error(`ElevenLabs API Error: ${errorResponse}`);
+      const errorText = await response.text();
+      throw new Error(`Azure TTS Error ${response.status}: ${errorText}`);
     }
 
     const buffer = await response.arrayBuffer();
     res.set('Content-Type', 'audio/mpeg');
     return res.send(Buffer.from(buffer));
   } catch (error) {
-    console.error('[ElevenLabs Proxy Error]:', error);
-    return res.status(500).json({ error: 'Error al generar síntesis de voz con ElevenLabs.' });
+    console.error('[Azure TTS Proxy Error]:', error);
+    return res.status(500).json({ error: 'Error al generar síntesis de voz con Azure.' });
+  }
+});
+
+// Alias para mantener compatibilidad con otras vistas de soporte locales
+app.post('/api/voice/tts', async (req, res) => {
+  // Traducir el body de ser necesario
+  const { text, voiceProfile } = req.body;
+  
+  // Forwardear a la lógica de Azure
+  const apiKey = process.env.AZURE_SPEECH_KEY;
+  const region = process.env.AZURE_SPEECH_REGION || 'eastus';
+
+  if (!apiKey || apiKey.trim() === '') {
+    return res.status(400).json({ error: 'La API Key de Azure Speech no está configurada.' });
+  }
+
+  if (!text) {
+    return res.status(400).json({ error: 'Se requiere el campo "text"' });
+  }
+
+  const azureVoice = voiceProfile === 'agustina' ? 'es-AR-ElenaNeural' : 'es-AR-TomasNeural';
+
+  try {
+    const ssml = `<speak version='1.0' xml:lang='es-AR'>
+  <voice name='${azureVoice}'>${text}</voice>
+</speak>`;
+
+    const response = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+      method: 'POST',
+      headers: {
+        'Ocp-Apim-Subscription-Key': apiKey,
+        'Content-Type': 'application/ssml+xml',
+        'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3',
+        'User-Agent': 'DeliveryPlus-AzureSpeechClient'
+      },
+      body: ssml
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Azure TTS Error ${response.status}: ${errorText}`);
+    }
+
+    const buffer = await response.arrayBuffer();
+    res.set('Content-Type', 'audio/mpeg');
+    return res.send(Buffer.from(buffer));
+  } catch (error) {
+    console.error('[Azure TTS Proxy Error (Voice URL)]:', error);
+    return res.status(500).json({ error: 'Error al generar síntesis de voz con Azure.' });
   }
 });
 

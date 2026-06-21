@@ -56,9 +56,9 @@ export const apiService = {
 
   async updateOrder(orderId: string | number, status: EstadoPedido) {
     let endpoint = `${API_BASE_URL}/api/v1/orders/${orderId}`;
-    if (status === EstadoPedido.READY_FOR_PICKUP) endpoint += '/ready';
-    else if (status === EstadoPedido.PICKED_UP) endpoint += '/pickup';
-    else if (status === EstadoPedido.DELIVERED) endpoint += '/deliver';
+    if ((status as any) === EstadoPedido.READY_FOR_PICKUP) endpoint += '/ready';
+    else if ((status as any) === EstadoPedido.PICKED_UP) endpoint += '/pickup';
+    else if ((status as any) === EstadoPedido.DELIVERED) endpoint += '/deliver';
     
     try {
       const res = await fetchWithTimeout(endpoint, { method: 'POST' });

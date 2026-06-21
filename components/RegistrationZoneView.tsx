@@ -88,36 +88,43 @@ const RegistrationZoneView: React.FC<Props> = ({ setPestañaActiva }) => {
           <div className="w-16 h-16 bg-blue-50 rounded-3xl flex items-center justify-center text-3xl mb-8 text-plus-blue">
             🏪
           </div>
-          <h3 className="text-2xl font-black italic uppercase tracking-tight text-gray-900 mb-4">Alta de Negocio</h3>
+          <h3 className="text-2xl font-black italic uppercase tracking-tight text-gray-900 mb-4">Alta de Negocio y Afiliados</h3>
           <p className="text-gray-600 mb-8 flex-1 text-sm leading-relaxed">
-            Expande tu alcance y aumenta tus ventas uniendo tu comercio a nuestra plataforma. Llegá a miles de clientes en tu zona.
+            Habilitá tu punto comercial o emprendimiento artesanal en Posadas. Soporte exclusivo en la red de reparto unificada de Delivery Plus.
           </p>
           
           <div className="space-y-6 mb-10 border-t border-slate-50 pt-6">
             <div>
-              <h4 className="font-bold text-gray-900 mb-3 uppercase tracking-wider text-xs">Requisitos</h4>
-              <ul className="space-y-2 text-sm text-gray-650 font-medium">
-                <li className="flex items-center gap-2"><span>✅</span> Constancia de inscripción (CUIT/Monotributo)</li>
-                <li className="flex items-center gap-2"><span>✅</span> Habilitación comercial vigente</li>
-                <li className="flex items-center gap-2"><span>✅</span> Cuenta bancaria o CVU (Mercado Pago / Banco)</li>
-                <li className="flex items-center gap-2"><span>✅</span> Menú o lista de productos con precios estables</li>
+              <h4 className="font-bold text-gray-900 mb-3 uppercase tracking-wider text-xs">Requisitos por Perfil</h4>
+              <ul className="space-y-3.5 text-xs text-gray-650 font-semibold list-none">
+                <li className="flex gap-2">
+                  <span>🏢</span>
+                  <div>
+                    <span className="font-black text-slate-800">Comercios:</span> Razón social, CUIT impositivo, Dirección de local, Teléfono de coordinación, Correo verificado.
+                  </div>
+                </li>
+                <li className="flex gap-2">
+                  <span>🏠</span>
+                  <div>
+                    <span className="font-black text-slate-800">Emprendedores:</span> Identificación DNI, Teléfono móvil, Correo electrónico con verificación activa.
+                  </div>
+                </li>
               </ul>
             </div>
             <div>
               <h4 className="font-bold text-gray-900 mb-3 uppercase tracking-wider text-xs">Acuerdo de Servicio</h4>
               <ul className="space-y-2 text-sm text-gray-650 font-medium">
-                <li className="flex items-center gap-2"><span>🤝</span> Comisión transparente por venta exitosa</li>
+                <li className="flex items-center gap-2"><span>🤝</span> Comisión reducida del 5% al 15% según volumen</li>
                 <li className="flex items-center gap-2"><span>⏱️</span> Liquidaciones semanales garantizadas</li>
-                <li className="flex items-center gap-2"><span>📱</span> Soporte de red comercial dedicado 24/7</li>
               </ul>
             </div>
           </div>
 
           <button 
             onClick={() => setPestañaActiva('alta-comercio')}
-            className="w-full py-5 bg-black hover:bg-gray-800 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all"
+            className="w-full py-5 bg-black hover:bg-gray-800 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all"
           >
-            Comenzar Alta de Negocio
+            Comenzar Alta de Afiliado
           </button>
         </div>
 
@@ -126,34 +133,40 @@ const RegistrationZoneView: React.FC<Props> = ({ setPestañaActiva }) => {
           <div className="w-16 h-16 bg-blue-50 rounded-3xl flex items-center justify-center text-3xl mb-8 text-plus-blue">
             🛵
           </div>
-          <h3 className="text-2xl font-black italic uppercase tracking-tight text-gray-900 mb-4">Alta de Delivery</h3>
+          <h3 className="text-2xl font-black italic uppercase tracking-tight text-gray-900 mb-4">Alta de Repartidores</h3>
           <p className="text-gray-600 mb-8 flex-1 text-sm leading-relaxed">
-            Sé tu propio jefe, maneja tus horarios y genera ingresos adicionales repartiendo con Delivery Plus.
+            Sé parte de la flota de cadetería mas rápida del nordeste. Maneja tus propios horarios eligiendo tu formato de transporte preferido.
           </p>
           
           <div className="space-y-6 mb-10 border-t border-slate-50 pt-6">
             <div>
-              <h4 className="font-bold text-gray-900 mb-3 uppercase tracking-wider text-xs">Requisitos</h4>
-              <ul className="space-y-2 text-sm text-gray-655 font-medium">
-                <li className="flex items-center gap-2"><span>✅</span> Ser mayor de 18 años</li>
-                <li className="flex items-center gap-2"><span>✅</span> Vehículo propio (Moto, Auto o Bicicleta)</li>
-                <li className="flex items-center gap-2"><span>✅</span> Licencia de conducir y póliza de seguro al día</li>
-                <li className="flex items-center gap-2"><span>✅</span> Smartphone con conexión de datos activa</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-gray-900 mb-3 uppercase tracking-wider text-xs">Acuerdo de Servicio</h4>
-              <ul className="space-y-2 text-sm text-gray-655 font-medium">
-                <li className="flex items-center gap-2"><span>💸</span> Ganancias competitivas por distancia y tiempo</li>
-                <li className="flex items-center gap-2"><span>🕒</span> Flexibilidad absoluta de agendas y turnos</li>
-                <li className="flex items-center gap-2"><span>🛡️</span> Cobertura de red y emergencias en Posadas</li>
+              <h4 className="font-bold text-gray-900 mb-3 uppercase tracking-wider text-xs">Estatuto por Vehículo</h4>
+              <ul className="space-y-3.5 text-xs text-gray-655 font-semibold list-none">
+                <li className="flex gap-2">
+                  <span>🚲</span>
+                  <div>
+                    <span className="font-black text-slate-850">Bicicleta:</span> DNI, Selfie biométrico, Teléfono verificado, Datos de CBU bancario.
+                  </div>
+                </li>
+                <li className="flex gap-2">
+                  <span>🛵</span>
+                  <div>
+                    <span className="font-black text-slate-850">Moto / Auto:</span> DNI, Selfie, Licencia habilitante, Cédula de vehículo, Seguro al día, Patente visible, Teléfono verificado.
+                  </div>
+                </li>
+                <li className="flex gap-2">
+                  <span>🚐</span>
+                  <div>
+                    <span className="font-black text-slate-850">Furgón:</span> Todos los requisitos anteriores, Habilitación específica/cadena de frío.
+                  </div>
+                </li>
               </ul>
             </div>
           </div>
 
           <button 
             onClick={() => setPestañaActiva('alta-socio')}
-            className="w-full py-5 bg-plus-blue hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-[0_20px_40px_rgba(37,99,235,0.25)]"
+            className="w-full py-5 bg-plus-blue hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-[0_20px_40px_rgba(37,99,235,0.25)]"
           >
             Comenzar Alta de Repartidor
           </button>

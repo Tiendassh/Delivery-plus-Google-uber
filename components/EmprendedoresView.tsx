@@ -4,6 +4,7 @@ import { mockApi } from '../services/mockApi';
 import { SocioRepartidor, EstadoPedido, Pedido } from '../types';
 import InteractiveMap from './InteractiveMap';
 import { notificationService } from '../services/notificationService';
+import VendedorIAChat from './VendedorIAChat';
 
 interface EntrepreneurOrder {
   id: string | number;
@@ -26,6 +27,8 @@ const EmprendedoresView: React.FC = () => {
   const [targetAddress, setTargetAddress] = useState('');
   const [packageDetails, setPackageDetails] = useState('');
   const [payAmount, setPayAmount] = useState('0');
+  const [showIaChat, setShowIaChat] = useState(false);
+  const [narratorVoice, setNarratorVoice] = useState<'carlos' | 'agustina' | 'vendedor_bot'>('carlos');
   
   // Coordenadas origen (domicilio del emprendedor)
   const originLat = -27.375;
@@ -51,6 +54,32 @@ const EmprendedoresView: React.FC = () => {
 
   const selectedGeo = destinationsGeo[selectedDest];
   const calculatedFee = 1600 + (Math.round(parseFloat(selectedGeo.dist) * 250));
+
+  // Reproductor Azure Speech o SpeechSynthesis nativo es-AR
+  const speakWithAzure = async (text: string, voiceProfile: 'carlos' | 'agustina' | 'vendedor_bot' = 'carlos') => {
+    try {
+      const response = await fetch('/api/elevenlabs/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voiceProfile })
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        await audio.play();
+      } else {
+        throw new Error();
+      }
+    } catch (err) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-AR';
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchAndLoad = async () => {
@@ -88,6 +117,9 @@ const EmprendedoresView: React.FC = () => {
           notificationService.playAlert('info');
           notificationService.notify("Paquete Retirado", `El chofer retiró el producto de tu domicilio.`);
           
+          const audioText = `¿Qué onda, che? ¡Ya retiramos tu paquete! El chofer va volando con destino a ${selectedGeo.name}.`;
+          speakWithAzure(audioText, narratorVoice);
+
           // Siguiente paso: ir al destino
           setTimeout(() => {
             setSimulationStep('GOING_TO_DELIVERY');
@@ -120,6 +152,9 @@ const EmprendedoresView: React.FC = () => {
           notificationService.playAlert('success');
           notificationService.notify("Envío Entregado", `¡Tu cliente recibió el paquete de Chocolates Artesanales!`);
           
+          const audioText = `¡Posta, excelente noticia! El paquete para ${clientName} ya fue entregado en tiempo récord en Posadas.`;
+          speakWithAzure(audioText, narratorVoice);
+
           // Actualizar en el historial
           mockApi.getOrders().then(o => {
             setActiveOrders(o.filter(p => p.detalles.includes('Emprendedor') || (p as any).tipoEntrega === 'PAQUETERIA'));
@@ -169,6 +204,9 @@ const EmprendedoresView: React.FC = () => {
       detalle: `Envío unitario: ${clientName} (${selectedGeo.name})`
     });
 
+    const triggerAudio = `¡Perfecto, che! Ya pedimos tu flete exprés para ${clientName}. El chofer ${availableDriver ? availableDriver.nombre : 'de Delivery Plus'} va rumbo a tu casa.`;
+    speakWithAzure(triggerAudio, narratorVoice);
+
     setTimeout(() => {
       setLoading(false);
       setSimulationStep('GOING_TO_PICKUP');
@@ -216,12 +254,26 @@ const EmprendedoresView: React.FC = () => {
               Despacho <span className="text-emerald-500">Express</span>
             </h2>
             <p className="text-slate-400 mt-4 text-sm max-w-xl font-medium">
-              Vendes desde casa, pides un repartidor desde la web. Sin mínimos, sin contratos forzosos. Paga por unidad por cada envío solicitado en el momento exacto de la venta.
+              Vendes desde casa, pides un repartidor desde la web. Sin mínimos, sin contratos forzosos. Paga por unidad por cada envío solicitado con narración de voz inteligente en tiempo real.
             </p>
           </div>
-          <div className="bg-white/5 px-8 py-6 rounded-[2.5rem] border border-white/10 backdrop-blur-md">
-            <p className="text-[8px] font-black opacity-30 uppercase tracking-widest mb-1 font-bold">Cobro por Envío</p>
-            <p className="text-2xl font-black text-emerald-500 italic">Precios del Barrio</p>
+          <div className="bg-white/5 px-8 py-6 rounded-[2.5rem] border border-white/10 backdrop-blur-md flex flex-col gap-2">
+            <div>
+              <p className="text-[8px] font-black opacity-30 uppercase tracking-widest mb-1 font-bold">Cobro por Envío</p>
+              <p className="text-xl font-black text-emerald-500 italic">Precios del Barrio</p>
+            </div>
+            <div className="border-t border-white/10 pt-2 flex items-center justify-between gap-4">
+              <span className="text-[8px] text-white/40 uppercase font-black">Voz Narrador:</span>
+              <select
+                value={narratorVoice}
+                onChange={(e) => setNarratorVoice(e.target.value as any)}
+                className="bg-black text-white text-[9px] border-none font-bold outline-none cursor-pointer rounded-lg p-1 uppercase"
+              >
+                <option value="carlos">Carlos 🗣️</option>
+                <option value="agustina">Agustina 🗣️</option>
+                <option value="vendedor_bot">Bot 🗣️</option>
+              </select>
+            </div>
           </div>
         </div>
         <div className="absolute -bottom-20 -right-20 text-[20rem] opacity-[0.02] font-black pointer-events-none italic">1ENVIO</div>
@@ -292,7 +344,7 @@ const EmprendedoresView: React.FC = () => {
 
                 {/* Importe a cobrar contra entrega */}
                 <div className="p-6 bg-slate-50 rounded-[2.5rem] border border-black/5">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Cobrar al Entregar ($)</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 block font-bold">Cobrar al Entregar ($)</label>
                   <input 
                     type="number" 
                     value={payAmount}
@@ -351,7 +403,7 @@ const EmprendedoresView: React.FC = () => {
                 <div key={idx} className="p-6 bg-slate-50 border border-black/5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-emerald-500/30 transition-all">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="px-3 py-1 bg-emerald-550/10 text-emerald-600 font-extrabold text-[7px] uppercase tracking-widest rounded-full">
+                      <span className="px-3 py-1 bg-emerald-555/10 text-emerald-600 font-extrabold text-[7px] uppercase tracking-widest rounded-full">
                         ID: #{String(ord.id).slice(-4)}
                       </span>
                       <span className="text-[10px] text-gray-400 font-bold">{ord.estado}</span>
@@ -359,11 +411,20 @@ const EmprendedoresView: React.FC = () => {
                     <p className="text-sm font-black uppercase text-gray-900">{ord.nombreCliente}</p>
                     <p className="text-[9px] font-bold text-gray-500 uppercase mt-0.5">{ord.detalles}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-black italic text-gray-900">${ord.monto.toLocaleString()}</p>
-                    <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">
-                      ● Envío por Unidad
-                    </span>
+                  <div className="text-right flex items-center gap-4">
+                    <div>
+                      <p className="text-lg font-black italic text-gray-900">${ord.monto.toLocaleString()}</p>
+                      <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">
+                        ● Envío por Unidad
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => speakWithAzure(`Pedido para ${ord.nombreCliente} con estado ${ord.estado}. Contiene ${ord.detalles}`, narratorVoice)}
+                      className="w-10 h-10 rounded-full border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-xs shadow-sm active:scale-90 transition-all"
+                      title="Escuchar detalles del pedido con acento argentino"
+                    >
+                      🔊
+                    </button>
                   </div>
                 </div>
               ))}
@@ -377,6 +438,37 @@ const EmprendedoresView: React.FC = () => {
 
         </div>
 
+      </div>
+
+      {/* Sección del Vendedor IA Integrada (Chat de Texto y Voz) */}
+      <div className="border-t border-black/5 pt-12">
+        <div className="bg-[#050505] p-10 md:p-12 rounded-[4rem] border border-white/5 shadow-2xl text-white mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+              <span className="px-3 py-1 bg-plus-blue/15 text-plus-blue font-black text-[8px] uppercase tracking-[0.2em] rounded-md border border-plus-blue/10">
+                PROBAR VOCES Y NEGOCIAR EN VIVO
+              </span>
+              <h3 className="text-3xl font-black italic uppercase italic tracking-tight mt-3">
+                ¿Querés probar las voces del Vendedor IA? 🎙️
+              </h3>
+              <p className="text-white/40 text-xs font-semibold mt-2 max-w-xl leading-relaxed">
+                Desplegá el chat interactivo para negociar fletes o entablar una conversación fluida con Carlos, Agustina o el robot con acento argentino es-AR nativo, tanto escribiendo como enviando tu audio de voz.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowIaChat(!showIaChat)}
+              className="px-8 py-4 bg-plus-blue hover:bg-blue-600 font-black text-[10px] uppercase tracking-wider text-white rounded-2xl transition-all shadow-lg active:scale-95"
+            >
+              {showIaChat ? 'Ocultar Chat de Voces' : 'Abrir Chat de Voces [es-AR]'}
+            </button>
+          </div>
+        </div>
+
+        {showIaChat && (
+          <div className="animate-in slide-in-from-bottom duration-500">
+            <VendedorIAChat />
+          </div>
+        )}
       </div>
 
     </div>

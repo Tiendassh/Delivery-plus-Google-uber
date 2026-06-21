@@ -6,7 +6,8 @@ const MODEL = 'gemini-3-pro-preview';
 export const generateSmartContract = async (clientData: string) => {
   try {
     // Correctly initialize GoogleGenAI with the API key from environment variables
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: MODEL,
       contents: `Genera una PROPUESTA COMERCIAL FORMAL para: ${clientData}. 

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Pedido, MensajeChat, ChatRoom } from '../types';
+import { Pedido, MensajeChat, ChatRoom, EstadoPedido } from '../types';
 import { firebaseService } from '../services/firebaseService';
 import { GoogleGenAI } from "@google/genai";
 
@@ -36,7 +36,8 @@ const SeccionVentasView: React.FC<SeccionVentasProps> = ({ activeOrders }) => {
     if (!currentChat || currentChat.mensajes.length === 0) return;
     setIsSummarizing(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+      const ai = new GoogleGenAI({ apiKey });
       const conversation = currentChat.mensajes.map(m => `${m.emisorNombre}: ${m.texto}`).join('\n');
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
@@ -65,7 +66,7 @@ const SeccionVentasView: React.FC<SeccionVentasProps> = ({ activeOrders }) => {
             >
               <div className="flex justify-between items-start mb-2">
                 <span className="text-[8px] font-black uppercase opacity-40">Pedido #{p.id}</span>
-                {p.estado === 'EN_CAMINO' && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10B981]"></span>}
+                {(p.estado === EstadoPedido.EN_CAMINO || p.estado === (EstadoPedido as any).EN_CAMINO) && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10B981]"></span>}
               </div>
               <p className="text-[11px] font-black uppercase truncate tracking-tight">{p.nombreCliente}</p>
               <p className="text-[8px] opacity-40 mt-1 uppercase truncate italic">{p.detalles}</p>
