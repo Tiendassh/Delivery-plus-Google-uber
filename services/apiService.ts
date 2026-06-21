@@ -1,4 +1,5 @@
 import { Pedido, EstadoPedido, SocioRepartidor, Comercio, WeatherNow } from '../types';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 const API_BASE_URL = ''; 
 
@@ -24,6 +25,16 @@ export const apiService = {
   },
 
   async fetchOrders(): Promise<Pedido[]> {
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data, error } = await supabase.from('pedidos').select('*');
+        if (error) throw error;
+        return data as Pedido[];
+      } catch (err: any) {
+        console.warn('Supabase fetchOrders failed (table may not exist), falling back to mock:', err.message);
+      }
+    }
+
     try {
       const res = await fetchWithTimeout(`${API_BASE_URL}/api/v1/orders`);
       if (!res.ok) throw new Error();
@@ -80,6 +91,16 @@ export const apiService = {
   },
 
   async getDrivers(): Promise<SocioRepartidor[]> {
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data, error } = await supabase.from('repartidores').select('*');
+        if (error) throw error;
+        return data as SocioRepartidor[];
+      } catch (err: any) {
+        console.warn('Supabase getDrivers failed:', err.message);
+      }
+    }
+
     try {
       const res = await fetchWithTimeout(`${API_BASE_URL}/api/v1/drivers`);
       return await res.json();
@@ -90,6 +111,16 @@ export const apiService = {
   },
 
   async getStores(): Promise<Comercio[]> {
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data, error } = await supabase.from('comercios').select('*');
+        if (error) throw error;
+        return data as Comercio[];
+      } catch (err: any) {
+        console.warn('Supabase getStores failed:', err.message);
+      }
+    }
+
     try {
       const res = await fetchWithTimeout(`${API_BASE_URL}/api/v1/stores`);
       return await res.json();
