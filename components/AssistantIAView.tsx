@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI } from '@google/genai';
 import { Mic, MicOff, Send, MessageSquare, Bot, AlertTriangle } from 'lucide-react';
 
 interface Message {
@@ -19,6 +18,31 @@ export const AssistantIAView: React.FC = () => {
   const [isAiResponding, setIsAiResponding] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+
+  const speakWithAzure = async (text: string, voiceProfile: 'carlos' | 'agustina' | 'vendedor_bot' = 'carlos') => {
+    try {
+      const response = await fetch('/api/elevenlabs/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voiceProfile })
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        await audio.play();
+      } else {
+        throw new Error();
+      }
+    } catch (err) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-AR';
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+  };
 
   const initMessages = {
     COMERCIO: "Hola. Soy el Asesor Comercial Profesional de Delivery Plus. ¿En qué te puedo ayudar hoy con respecto a tus turnos, dudas o la creación de un nuevo pedido?",
@@ -97,11 +121,6 @@ export const AssistantIAView: React.FC = () => {
     setIsAiResponding(true);
 
     try {
-      const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
-      if (!apiKey) throw new Error("API Key no configurada.");
-      
-      const ai = new GoogleGenAI({ apiKey });
-      
       const isDaytime = new Date().getHours() >= 6 && new Date().getHours() < 22;
       const horarioInstruccion = isDaytime 
         ? "Horario Diurno Activo. Añade a tu personalidad: Comercial, Cercana, Proactiva." 
@@ -134,26 +153,24 @@ export const AssistantIAView: React.FC = () => {
         `;
       }
 
-      const conversationHistory = messages.slice(-6).map(m => ({
-        role: m.sender === 'user' ? 'user' : 'model',
-        parts: [{ text: m.text }]
-      }));
+      const conversationHistory = [...messages.slice(-6), userMsg];
 
-      conversationHistory.push({
-        role: 'user',
-        parts: [{ text: finalMsg }]
+      // Request to backend instead of local SDK
+      const res = await fetch('/api/gemini/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: conversationHistory,
+          systemInstruction
+        })
       });
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: conversationHistory as any,
-        config: {
-          systemInstruction,
-          temperature: 0.7
-        }
-      });
-
-      const aiText = response.text || 'Ocurrió un error en la red neuronal.';
+      if (!res.ok) {
+        throw new Error('Error de conexión con el proxy de Gemini');
+      }
+      
+      const data = await res.json();
+      const aiText = data.text || 'Ocurrió un error en la red neuronal.';
       
       const aiMsg: Message = {
         id: `ai-${Date.now()}`,
@@ -163,6 +180,7 @@ export const AssistantIAView: React.FC = () => {
       };
 
       setMessages(prev => [...prev, aiMsg]);
+      speakWithAzure(aiText, activeRole === 'COMERCIO' ? 'carlos' : (activeRole === 'EMPRENDEDOR' ? 'agustina' : 'vendedor_bot'));
     } catch (error) {
       console.error('Gemini Error in IA Assistant:', error);
       
@@ -274,31 +292,42 @@ export const AssistantIAView: React.FC = () => {
         </div>
 
         {/* Chat Input */}
-        <footer className="p-6 bg-dp-surface border-t border-dp-border flex gap-4 items-center rounded-b-[3rem]">
-          <button
-            onClick={toggleRecording}
-            className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${isRecording ? 'bg-dp-danger text-white shadow-lg animate-pulse scale-105' : 'bg-dp-surfaceLight border border-dp-border hover:bg-dp-border text-dp-textMuted hover:text-white'}`}
-          >
-            {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
-          </button>
+        <footer className="p-4 bg-dp-surface border-t border-dp-border flex gap-3 items-end rounded-b-[3rem]">
+          <div className="flex-1 bg-dp-surfaceLight border border-dp-border rounded-3xl flex items-center px-4 py-1">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={e => setInputValue(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+              placeholder="Mensaje o habla..."
+              className="flex-1 bg-transparent text-dp-text py-3 text-sm focus:outline-none placeholder-dp-textMuted/50"
+              disabled={isRecording || isAiResponding}
+            />
+          </div>
 
-          <input
-            type="text"
-            value={inputValue}
-            onChange={e => setInputValue(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-            placeholder={isRecording ? 'Escuchando tu voz...' : 'Escribí tu consulta a la IA (Ej: ¿Cómo mejoro mi nivel?)'}
-            className="flex-1 bg-dp-surfaceLight border border-dp-border text-dp-text rounded-full px-6 py-4 text-xs font-bold focus:ring-2 focus:ring-dp-primary/20 focus:outline-none placeholder-dp-textMuted/50"
-            disabled={isRecording}
-          />
-
-          <button
-            onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isAiResponding}
-            className="dp-button w-14 h-14 rounded-full px-0 disabled:opacity-40"
-          >
-            <Send size={18} className="translate-x-[-1px] translate-y-[1px]" />
-          </button>
+          <div className="flex items-center gap-2 mb-1">
+            {inputValue.trim().length > 0 ? (
+              <button
+                onClick={handleSendMessage}
+                disabled={isAiResponding}
+                className="dp-button w-12 h-12 rounded-full px-0 disabled:opacity-40 flex items-center justify-center shrink-0 shadow-lg shadow-dp-primary/20"
+              >
+                <Send size={20} className="translate-x-[-2px] translate-y-[1px]" />
+              </button>
+            ) : (
+              <button
+                onClick={toggleRecording}
+                disabled={isAiResponding}
+                className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-colors shadow-lg ${
+                  isRecording 
+                    ? 'bg-dp-danger text-white animate-pulse shadow-dp-danger/30' 
+                    : 'bg-dp-primary text-white shadow-dp-primary/20 hover:opacity-90'
+                }`}
+              >
+                {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
+              </button>
+            )}
+          </div>
         </footer>
       </div>
     </div>

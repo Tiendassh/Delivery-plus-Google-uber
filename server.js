@@ -86,6 +86,43 @@ app.post('/api/stores', (req, res) => {
   res.status(201).json(newStore);
 });
 
+// --- GEMINI REST PROXY FOR CHAT IA ---
+const { GoogleGenAI } = require("@google/genai");
+
+app.post('/api/gemini/chat', async (req, res) => {
+  const { messages: currentMessages, systemInstruction } = req.body;
+  const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    return res.status(400).json({ error: "La API Key de Gemini no está configurada en el servidor." });
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+    
+    // Map messages payload to contents
+    const contents = currentMessages.map(m => ({
+      role: m.sender === 'user' ? 'user' : 'model',
+      parts: [{ text: m.text }]
+    }));
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: contents,
+      config: {
+        systemInstruction: systemInstruction,
+        temperature: 0.7
+      }
+    });
+
+    const aiText = response.text || "Hubo un error al generar la respuesta.";
+    res.json({ text: aiText });
+  } catch (error) {
+    console.error("[Gemini API Proxy Error]:", error);
+    res.status(500).json({ error: error.message || "Error interno llamando a Gemini." });
+  }
+});
+
 // --- CLIMA (WEATHER) API PROXY ---
 app.get('/api/v1/weather/now', async (req, res) => {
   const { lat, lng } = req.query;
@@ -132,7 +169,7 @@ app.get('/api/v1/weather/now', async (req, res) => {
 app.post('/api/elevenlabs/tts', async (req, res) => {
   const { text, voiceProfile } = req.body;
   const apiKey = process.env.AZURE_SPEECH_KEY;
-  const region = process.env.AZURE_SPEECH_REGION || 'eastus';
+  const region = process.env.AZURE_SPEECH_REGION || 'brazilsouth';
 
   if (!apiKey || apiKey.trim() === '') {
     return res.status(400).json({ error: 'La API Key de Azure Speech no está configurada.' });
@@ -188,7 +225,7 @@ app.post('/api/voice/tts', async (req, res) => {
   
   // Forwardear a la lógica de Azure
   const apiKey = process.env.AZURE_SPEECH_KEY;
-  const region = process.env.AZURE_SPEECH_REGION || 'eastus';
+  const region = process.env.AZURE_SPEECH_REGION || 'brazilsouth';
 
   if (!apiKey || apiKey.trim() === '') {
     return res.status(400).json({ error: 'La API Key de Azure Speech no está configurada.' });
