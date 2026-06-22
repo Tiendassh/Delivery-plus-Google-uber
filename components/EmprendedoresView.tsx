@@ -21,6 +21,8 @@ interface EntrepreneurOrder {
   lngDest: number;
 }
 
+import { voiceService } from '../services/voiceService';
+
 const EmprendedoresView: React.FC = () => {
   const [enterpriseName, setEnterpriseName] = useState('Chocolates Artesanales Posadas');
   const [clientName, setClientName] = useState('');
@@ -28,7 +30,7 @@ const EmprendedoresView: React.FC = () => {
   const [packageDetails, setPackageDetails] = useState('');
   const [payAmount, setPayAmount] = useState('0');
   const [showIaChat, setShowIaChat] = useState(false);
-  const [narratorVoice, setNarratorVoice] = useState<'carlos' | 'agustina' | 'vendedor_bot'>('carlos');
+  const [narratorVoice, setNarratorVoice] = useState<'valentina' | 'mateo'>('valentina');
   
   // Coordenadas origen (domicilio del emprendedor)
   const originLat = -27.375;
@@ -54,32 +56,6 @@ const EmprendedoresView: React.FC = () => {
 
   const selectedGeo = destinationsGeo[selectedDest];
   const calculatedFee = 1600 + (Math.round(parseFloat(selectedGeo.dist) * 250));
-
-  // Reproductor Azure Speech o SpeechSynthesis nativo es-AR
-  const speakWithAzure = async (text: string, voiceProfile: 'carlos' | 'agustina' | 'vendedor_bot' = 'carlos') => {
-    try {
-      const response = await fetch('/api/elevenlabs/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voiceProfile })
-      });
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        await audio.play();
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'es-AR';
-        window.speechSynthesis.speak(utterance);
-      }
-    }
-  };
 
   useEffect(() => {
     const fetchAndLoad = async () => {
@@ -118,7 +94,7 @@ const EmprendedoresView: React.FC = () => {
           notificationService.notify("Paquete Retirado", `El chofer retiró el producto de tu domicilio.`);
           
           const audioText = `¿Qué onda, che? ¡Ya retiramos tu paquete! El chofer va volando con destino a ${selectedGeo.name}.`;
-          speakWithAzure(audioText, narratorVoice);
+          voiceService.speak(audioText, narratorVoice);
 
           // Siguiente paso: ir al destino
           setTimeout(() => {
@@ -153,7 +129,7 @@ const EmprendedoresView: React.FC = () => {
           notificationService.notify("Envío Entregado", `¡Tu cliente recibió el paquete de Chocolates Artesanales!`);
           
           const audioText = `¡Posta, excelente noticia! El paquete para ${clientName} ya fue entregado en tiempo récord en Posadas.`;
-          speakWithAzure(audioText, narratorVoice);
+          voiceService.speak(audioText, narratorVoice);
 
           // Actualizar en el historial
           mockApi.getOrders().then(o => {
@@ -205,7 +181,7 @@ const EmprendedoresView: React.FC = () => {
     });
 
     const triggerAudio = `¡Perfecto, che! Ya pedimos tu flete exprés para ${clientName}. El chofer ${availableDriver ? availableDriver.nombre : 'de Delivery Plus'} va rumbo a tu casa.`;
-    speakWithAzure(triggerAudio, narratorVoice);
+    voiceService.speak(triggerAudio, narratorVoice);
 
     setTimeout(() => {
       setLoading(false);
@@ -419,7 +395,7 @@ const EmprendedoresView: React.FC = () => {
                       </span>
                     </div>
                     <button
-                      onClick={() => speakWithAzure(`Pedido para ${ord.nombreCliente} con estado ${ord.estado}. Contiene ${ord.detalles}`, narratorVoice)}
+                      onClick={() => voiceService.speak(`Pedido para ${ord.nombreCliente} con estado ${ord.estado}. Contiene ${ord.detalles}`, narratorVoice)}
                       className="w-10 h-10 rounded-full border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-xs shadow-sm active:scale-90 transition-all"
                       title="Escuchar detalles del pedido con acento argentino"
                     >

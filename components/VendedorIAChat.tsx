@@ -10,18 +10,20 @@ interface Message {
   voiceProfile?: string;
 }
 
+import { voiceService } from '../services/voiceService';
+
 const VendedorIAChat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'init-1',
       sender: 'vendedor',
-      text: '¡Buenas! ¿Cómo va todo, che? Soy Carlos de Delivery Plus. Contame, ¿qué andás necesitando para la logística de tu negocio en Posadas?',
+      text: '¡Buenas! ¿Cómo va todo, che? Soy Mateo de Delivery Plus. Contame, ¿qué andás necesitando para la logística de tu negocio en Posadas?',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      voiceProfile: 'carlos'
+      voiceProfile: 'mateo'
     }
   ]);
   const [inputValue, setInputValue] = useState('');
-  const [voiceProfile, setVoiceProfile] = useState<'carlos' | 'agustina' | 'vendedor_bot'>('carlos');
+  const [voiceProfile, setVoiceProfile] = useState<'valentina' | 'mateo'>('mateo');
   const [isRecording, setIsRecording] = useState(false);
   const [isPlayingId, setIsPlayingId] = useState<string | null>(null);
   const [isAiResponding, setIsAiResponding] = useState(false);
@@ -81,38 +83,12 @@ const VendedorIAChat: React.FC = () => {
     }
   };
 
-  const playVoiceMessage = async (msgId: string, text: string, profile: 'carlos' | 'agustina' | 'vendedor_bot') => {
+  const playVoiceMessage = async (msgId: string, text: string, profile: 'valentina' | 'mateo') => {
     setIsPlayingId(msgId);
     try {
-      // Llamar al proxy del servidor /api/elevenlabs/tts
-      const response = await fetch('/api/elevenlabs/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voiceProfile: profile })
-      });
-
-      if (!response.ok) {
-        throw new Error('Server TTS proxy response error');
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.onended = () => setIsPlayingId(null);
-      await audio.play();
-    } catch (err) {
-      console.warn('Azure Speech API no cargada o error. Usando síntesis nativa.');
-      // Fallback a speech synthesis nativa
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'es-AR';
-        utterance.onend = () => setIsPlayingId(null);
-        utterance.onerror = () => setIsPlayingId(null);
-        window.speechSynthesis.speak(utterance);
-      } else {
-        setIsPlayingId(null);
-      }
+      await voiceService.speak(text, profile);
+    } finally {
+      setIsPlayingId(null);
     }
   };
 
@@ -239,22 +215,16 @@ const VendedorIAChat: React.FC = () => {
           <label className="text-[9px] font-black uppercase tracking-wider text-slate-400">Perfil de voz:</label>
           <div className="bg-white/5 border border-white/10 p-1 rounded-2xl flex gap-1">
             <button
-              onClick={() => setVoiceProfile('carlos')}
-              className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all ${voiceProfile === 'carlos' ? 'bg-plus-blue text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+              onClick={() => setVoiceProfile('mateo')}
+              className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all ${voiceProfile === 'mateo' ? 'bg-plus-blue text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
             >
-              Carlos 🙋‍♂️
+              Mateo 🙋‍♂️
             </button>
             <button
-              onClick={() => setVoiceProfile('agustina')}
-              className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all ${voiceProfile === 'agustina' ? 'bg-plus-blue text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+              onClick={() => setVoiceProfile('valentina')}
+              className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all ${voiceProfile === 'valentina' ? 'bg-plus-blue text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
             >
-              Agustina 🙋‍♀️
-            </button>
-            <button
-              onClick={() => setVoiceProfile('vendedor_bot')}
-              className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all ${voiceProfile === 'vendedor_bot' ? 'bg-plus-blue text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-            >
-              Bot 🤖
+              Valentina 🙋‍♀️
             </button>
           </div>
 

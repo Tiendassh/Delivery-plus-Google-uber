@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { voiceService } from '../services/voiceService';
 
 const HybridSupportView: React.FC = () => {
   const [messages, setMessages] = useState([
@@ -18,34 +19,9 @@ const HybridSupportView: React.FC = () => {
   const playVoice = async (id: number, text: string) => {
     setPlayingId(id);
     try {
-      const response = await fetch('/api/voice/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
-      });
-
-      if (!response.ok) {
-        throw new Error('ElevenLabs failed');
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.onended = () => setPlayingId(null);
-      await audio.play();
-    } catch (err) {
-      console.warn('ElevenLabs API can/is not configured yet. Falling back to native SpeechSynthesis.');
-      // Native SpeechSynthesis fallback
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'es-AR';
-        utterance.onend = () => setPlayingId(null);
-        utterance.onerror = () => setPlayingId(null);
-        window.speechSynthesis.speak(utterance);
-      } else {
-        setPlayingId(null);
-      }
+      await voiceService.speak(text, 'valentina'); // Or any default voice
+    } finally {
+      setPlayingId(null);
     }
   };
 

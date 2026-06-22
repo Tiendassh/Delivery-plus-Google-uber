@@ -19,6 +19,8 @@ interface ContractedShift {
   driverLng: number;
 }
 
+import { voiceService } from '../services/voiceService';
+
 const ComerciosTurnosView: React.FC = () => {
   const [stores, setStores] = useState<Comercio[]>([]);
   const [drivers, setDrivers] = useState<SocioRepartidor[]>([]);
@@ -29,33 +31,7 @@ const ComerciosTurnosView: React.FC = () => {
   const [contractedShifts, setContractedShifts] = useState<ContractedShift[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [showIaChat, setShowIaChat] = useState<boolean>(false);
-  const [narratorVoice, setNarratorVoice] = useState<'carlos' | 'agustina' | 'vendedor_bot'>('carlos');
-
-  // Reproductor Azure Speech o SpeechSynthesis nativo es-AR
-  const speakWithAzure = async (text: string, voiceProfile: 'carlos' | 'agustina' | 'vendedor_bot' = 'carlos') => {
-    try {
-      const response = await fetch('/api/elevenlabs/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voiceProfile })
-      });
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        await audio.play();
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'es-AR';
-        window.speechSynthesis.speak(utterance);
-      }
-    }
-  };
+  const [narratorVoice, setNarratorVoice] = useState<'valentina' | 'mateo'>('valentina');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -142,7 +118,7 @@ const ComerciosTurnosView: React.FC = () => {
        });
 
       const confirmText = `¡Listo, mirá! Contrataste la cobertura exclusiva de ${hours} horas para ${storeObj.nombre}. El repartidor ${driverObj.nombre} ya quedó asignado a tu local.`;
-      speakWithAzure(confirmText, narratorVoice);
+      voiceService.speak(confirmText, narratorVoice);
 
       notificationService.notify(
         "Turno Contratado Exitosamente",
@@ -353,7 +329,7 @@ const ComerciosTurnosView: React.FC = () => {
                       </span>
                     </div>
                     <button
-                      onClick={() => speakWithAzure(`Contrato de turno ${sh.id} para ${sh.storeName} por ${sh.hours} horas con el chofer ${sh.driverName}.`, narratorVoice)}
+                      onClick={() => voiceService.speak(`Contrato de turno ${sh.id} para ${sh.storeName} por ${sh.hours} horas con el chofer ${sh.driverName}.`, narratorVoice)}
                       className="w-10 h-10 rounded-full border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-xs shadow-sm active:scale-90 transition-all"
                       title="Escuchar detalles del turno..."
                     >
