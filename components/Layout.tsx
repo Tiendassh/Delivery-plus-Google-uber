@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { UserRole } from '../types';
 import { Menu, Home, Briefcase, Calendar, Wallet, User, Shield, Package, Store, Bot, X } from 'lucide-react';
+import { NotificationCenter } from './NotificationCenter';
 
 interface Props {
   children: React.ReactNode;
@@ -62,9 +63,12 @@ const Layout: React.FC<Props> = ({ children, activeRole, setActiveRole, activeVi
             Delivery<span className="text-dp-primary">Plus</span>
           </h1>
         </div>
-        <div className="px-3 py-1 bg-dp-surfaceLight border border-dp-border rounded-full text-xs font-semibold text-dp-textMuted flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-dp-success animate-pulse"></span>
-          {roles.find(r => r.id === activeRole)?.label || activeRole}
+        <div className="flex items-center gap-4">
+          <div className="px-3 py-1 bg-dp-surfaceLight border border-dp-border rounded-full text-xs font-semibold text-dp-textMuted flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-dp-success animate-pulse"></span>
+            {roles.find(r => r.id === activeRole)?.label || activeRole}
+          </div>
+          <NotificationCenter />
         </div>
       </header>
 

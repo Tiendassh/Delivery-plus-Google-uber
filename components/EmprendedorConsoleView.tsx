@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { SocioRepartidor, Pedido, EstadoPedido } from '../types';
+import { WeatherWidget3D } from './WeatherWidget3D';
+import { MiniTrackingMap } from './MiniTrackingMap';
+import { IARecomendationBlock } from './IARecomendationBlock';
 
 interface EmprendedorConsoleProps {
   repartidores: SocioRepartidor[];
@@ -118,6 +121,12 @@ export const EmprendedorConsoleView: React.FC<EmprendedorConsoleProps> = ({
           </button>
         </div>
       </header>
+
+      {/* Weather Widget */}
+      <WeatherWidget3D />
+
+      {/* IA recommendations section */}
+      <IARecomendationBlock role="EMPRENDEDOR" />
 
       {/* Grid: 1. Crear Envíos Individuales / 2. Contratar Repartidores Instant */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -261,6 +270,17 @@ export const EmprendedorConsoleView: React.FC<EmprendedorConsoleProps> = ({
           </div>
         </div>
 
+      </div>
+
+      {/* Tracking Mini Map */}
+      <div className="bg-white p-10 rounded-[4rem] border border-black/5 shadow-xl flex flex-col gap-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-2xl font-black italic uppercase">Tracking GPS Logístico</h3>
+            <p className="text-xs text-slate-400 font-bold uppercase mt-1">Ubicación de tus envíos y de mensajeros en ruta en tiempo real.</p>
+          </div>
+        </div>
+        <MiniTrackingMap role="EMPRENDEDOR" />
       </div>
 
       {/* Grid: 3. Historial de Envíos / 4. Gestión de Pagos */}

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { SocioRepartidor, Pedido, EstadoPedido } from '../types';
+import { WeatherWidget3D } from './WeatherWidget3D';
+import { MiniTrackingMap } from './MiniTrackingMap';
+import { IARecomendationBlock } from './IARecomendationBlock';
 
 interface RepartidorConsoleProps {
   pedidos: Pedido[];
@@ -20,12 +23,6 @@ export const RepartidorConsoleView: React.FC<RepartidorConsoleProps> = ({
   const [vehicle, setVehicle] = useState<string>(repartidor.vehiculo || 'Moto de Reparto');
   const [plate, setPlate] = useState<string>(repartidor.patente || 'A023BC4');
   const [profileSaved, setProfileSaved] = useState<boolean>(false);
-
-  // IA recommendations state
-  const [iaRecommendation, setIaRecommendation] = useState<string>(
-    'Che che, cargá tu cel y prepará el casco. Hacé clic en "Generar Recomendación Operativa IA" para que estudie el clima de hoy y te diga dónde están los fletes más jugosos.'
-  );
-  const [iaLoading, setIaLoading] = useState<boolean>(false);
 
   // Available job listings (simulation)
   const [availableJobs, setAvailableJobs] = useState([
@@ -67,35 +64,6 @@ export const RepartidorConsoleView: React.FC<RepartidorConsoleProps> = ({
       setWithdrawalToast(true);
       setTimeout(() => setWithdrawalToast(false), 4000);
     }, 2000);
-  };
-
-  const handleGetIaRecommendation = async () => {
-    setIaLoading(true);
-    try {
-      const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
-      const ai = new GoogleGenAI({ apiKey });
-      const prompt = `Actúa como el estratega logístico líder de Delivery Plus en Argentina. 
-      Escribe en dialecto argentino coloquial rioplatense (che, mirá, viste, laburo, bondi, etc.). 
-      El repartidor tiene un vehículo tipo ${vehicle}, está ${isOnDuty ? 'activo' : 'inactivo'}, y hay ${availableJobs.length} pedidos disponibles y ${availableShifts.length} turnos esperando asignación. 
-      Dales 2 o 3 consejos súper precisos, cortitos e inteligentes (máximo 70 palabras). No uses markdown, escribe un bloque fluido de texto plano con excelente vibra argentina.`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt
-      });
-
-      if (response && response.text) {
-        setIaRecommendation(response.text);
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      setIaRecommendation(
-        '¡Che, mirá! Justo se saturó la señal satelital, pero metele garra: hoy de tarde conviene arrimarte a las zonas de heladerías que el calor se viene con todo en la Costanera. ¡Metéle acelerador!'
-      );
-    } finally {
-      setIaLoading(false);
-    }
   };
 
   const handleTakeJob = (jobId: string, store: string, payout: number) => {
@@ -146,36 +114,11 @@ export const RepartidorConsoleView: React.FC<RepartidorConsoleProps> = ({
         </div>
       </header>
 
-      {/* IA recommendations section */}
-      <div className="bg-dp-surfaceLight text-dp-text p-8 md:p-12 rounded-[20px] border border-dp-primary/30 shadow-lg shadow-dp-primary/10 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-12 text-[15rem] font-poppins font-black text-dp-primary/[0.05] select-none pointer-events-none">
-          I.A.
-        </div>
-        
-        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-          <div className="max-w-2xl">
-            <span className="px-3 py-1 bg-dp-primary/15 text-dp-primary font-black text-[8px] uppercase tracking-[0.2em] rounded-md border border-dp-primary/20">
-              ASISTENTE PREDICTIVO IA NATIVO [ARGENTINA]
-            </span>
-            <h3 className="text-2xl md:text-3xl font-poppins font-bold mt-4">
-              Recomendación Operativa delivery Plus
-            </h3>
-            <p className="text-dp-textMuted text-sm font-semibold mt-4 leading-relaxed">
-              "{iaRecommendation}"
-            </p>
-          </div>
+      {/* Weather Widget */}
+      <WeatherWidget3D />
 
-          <button
-            onClick={handleGetIaRecommendation}
-            disabled={iaLoading}
-            className={`dp-button uppercase tracking-wider px-8 text-[10px] ${
-              iaLoading ? 'animate-pulse opacity-50' : ''
-            }`}
-          >
-            {iaLoading ? 'Analizando Red...' : 'Recibir Consejos Heurísticos IA'}
-          </button>
-        </div>
-      </div>
+      {/* IA recommendations section */}
+      <IARecomendationBlock role="REPARTIDOR" />
 
       {/* Grid: 1. Buscar Trabajos / 2. Reservar Turnos */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -260,6 +203,20 @@ export const RepartidorConsoleView: React.FC<RepartidorConsoleProps> = ({
           </div>
         </div>
 
+      </div>
+
+      {/* Tracking Mini Map */}
+      <div className="dp-card p-10 flex flex-col gap-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-2xl font-poppins font-bold">Posicionamiento Global</h3>
+            <p className="text-xs text-dp-textMuted font-semibold mt-1">Status de zona y ruteo en tiempo real.</p>
+          </div>
+          <span className="px-3 py-1 bg-dp-success/10 text-dp-success border border-dp-success/20 rounded-md text-[9px] font-black uppercase tracking-widest animate-pulse">
+            GPS Activo
+          </span>
+        </div>
+        <MiniTrackingMap role="REPARTIDOR" />
       </div>
 
       {/* Grid: 3. Wallet / 4. Profile */}
