@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Bell, CheckCircle, Clock, X, Info, AlertTriangle } from 'lucide-react';
+import { BrandWatermark, BrandAvatar } from './BrandComponents';
 
 export const NotificationCenter: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,9 +42,9 @@ export const NotificationCenter: React.FC = () => {
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
           
-          <div className="relative w-full max-w-md bg-dp-surface h-full border-l border-dp-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-            
-            <header className="p-6 border-b border-dp-border flex justify-between items-center bg-dp-surfaceLight/50">
+          <div className="relative w-full max-w-md bg-dp-surface h-full border-l border-dp-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 overflow-hidden">
+            <BrandWatermark opacity="opacity-[0.05]" />
+            <header className="p-6 border-b border-dp-border flex justify-between items-center bg-dp-surfaceLight/50 relative z-10">
               <div className="flex items-center gap-3">
                 <Bell className="w-6 h-6 text-dp-primary" />
                 <h2 className="text-xl font-poppins font-bold text-dp-text">Notificaciones</h2>
@@ -53,7 +54,7 @@ export const NotificationCenter: React.FC = () => {
               </button>
             </header>
 
-            <div className="p-4 flex gap-2 border-b border-dp-border">
+            <div className="p-4 flex gap-2 border-b border-dp-border relative z-10">
               <button 
                 onClick={() => setActiveTab('ALL')}
                 className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors ${activeTab === 'ALL' ? 'bg-dp-primary text-white' : 'bg-dp-surfaceLight text-dp-textMuted hover:bg-dp-border'}`}
@@ -68,10 +69,10 @@ export const NotificationCenter: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 relative z-10">
               {notifications.filter(n => activeTab === 'ALL' || !n.read).map(notif => (
-                <div key={notif.id} className={`p-4 rounded-2xl border ${notif.read ? 'bg-dp-surfaceLight border-dp-border' : 'bg-dp-primary/5 border-dp-primary/20'} flex gap-4 transition-all hover:bg-dp-border/50 cursor-default`}>
-                  <div className="mt-1 shrink-0">{getIcon(notif.type)}</div>
+                <div key={notif.id} className={`p-4 rounded-2xl border ${notif.read ? 'bg-dp-surfaceLight border-dp-border' : 'bg-dp-primary/5 border-dp-primary/20'} flex gap-4 transition-all hover:bg-dp-border/50 cursor-default backdrop-blur-sm`}>
+                  <div className="mt-1 shrink-0 relative">{getIcon(notif.type)}{!notif.read && <BrandAvatar className="absolute -bottom-2 -right-2 w-4 h-4 shadow-sm" />}</div>
                   <div className="flex-1">
                     <h4 className="text-sm font-poppins font-bold text-dp-text">{notif.title}</h4>
                     <p className="text-xs text-dp-textMuted mt-1 leading-relaxed">{notif.msg}</p>

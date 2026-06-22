@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SocioRepartidor, Pedido, EstadoPedido } from '../types';
 import InteractiveMap from './InteractiveMap';
+import { CorporateBrandPanel } from './BrandComponents';
 
 interface AdminConsoleProps {
   pedidos: Pedido[];
@@ -78,8 +79,11 @@ export const AdminConsoleView: React.FC<AdminConsoleProps> = ({ pedidos, reparti
   };
 
   return (
-    <div className="flex flex-col gap-12 animate-in fade-in duration-500">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-8 items-start animate-in fade-in duration-500">
+      
+      {/* 70% Contenido: Información Operativa */}
+      <div className="flex flex-col gap-12 w-full">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
           <span className="px-3 py-1 bg-plus-blue/15 text-plus-blue font-black text-[8px] uppercase tracking-[0.2em] rounded-md border border-plus-blue/10">
             Nivel de Red: Central Nacional
@@ -454,6 +458,12 @@ export const AdminConsoleView: React.FC<AdminConsoleProps> = ({ pedidos, reparti
             </div>
           ))}
         </div>
+      </div>
+      </div>
+      
+      {/* 30% Branding corporativo */}
+      <div className="hidden xl:block h-[calc(100vh-140px)] sticky top-28">
+        <CorporateBrandPanel />
       </div>
 
     </div>

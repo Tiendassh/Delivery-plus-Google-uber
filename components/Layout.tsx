@@ -104,6 +104,19 @@ const Layout: React.FC<Props> = ({ children, activeRole, setActiveRole, activeVi
                    </button>
                  );
                })}
+
+               <div className="my-4 border-t border-dp-border"></div>
+
+               <button
+                 onClick={() => {
+                   setActiveView('acerca');
+                   setIsDrawerOpen(false);
+                 }}
+                 className="w-full flex items-center gap-4 px-4 py-4 rounded-xl font-medium transition-colors text-dp-textMuted hover:text-white hover:bg-dp-surfaceLight"
+               >
+                 <Shield size={20} className="text-dp-textMuted group-hover:text-white" />
+                 Acerca de Delivery Plus
+               </button>
             </div>
           </div>
         </div>

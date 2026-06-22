@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Send, MessageSquare, Bot, AlertTriangle, Settings2, UserCircle, Car } from 'lucide-react';
 import { voiceService } from '../services/voiceService';
+import { BrandAvatar, BrandWatermark } from './BrandComponents';
 
 interface Message {
   id: string;
@@ -273,17 +274,15 @@ export const AssistantIAView: React.FC = () => {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 bg-dp-background border border-dp-border rounded-[3rem] overflow-hidden flex flex-col shadow-sm h-[600px] xl:h-auto">
-        
+      <div className="flex-1 bg-dp-background border border-dp-border rounded-[3rem] overflow-hidden flex flex-col shadow-sm h-[600px] xl:h-auto relative">
+        <BrandWatermark opacity="opacity-[0.05]" />
         {/* Chat History */}
-        <div ref={scrollRef} className="flex-1 p-6 md:p-10 overflow-y-auto space-y-6">
+        <div ref={scrollRef} className="flex-1 p-6 md:p-10 overflow-y-auto space-y-6 relative z-10">
           {messages.map((m) => (
             <div key={m.id} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
               <div className="flex items-end gap-3 max-w-[90%] md:max-w-[75%]">
                 {m.sender === 'ia' && (
-                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-lg ${selectedVoice === 'valentina' ? 'bg-indigo-500 text-white shadow-indigo-500/20' : 'bg-sky-500 text-white shadow-sky-500/20'}`}>
-                      <Bot size={14} />
-                   </div>
+                   <BrandAvatar className="w-8 h-8 shrink-0" pulse={isAiResponding && messages.length - 1 === messages.indexOf(m)} />
                 )}
                 
                 <div className={`p-4 md:p-6 rounded-[2rem] text-[13px] md:text-sm font-medium leading-relaxed shadow-sm ${
@@ -302,9 +301,7 @@ export const AssistantIAView: React.FC = () => {
 
           {isAiResponding && (
             <div className="flex items-end gap-3 animate-pulse">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${selectedVoice === 'valentina' ? 'bg-indigo-100 text-indigo-500' : 'bg-sky-100 text-sky-500'}`}>
-                  <Bot size={14} />
-              </div>
+              <BrandAvatar className="w-8 h-8 shrink-0" pulse={true} />
               <div className="p-4 bg-white border border-dp-border rounded-[2rem] rounded-bl-none text-[10px] font-black text-dp-textMuted uppercase tracking-widest">
                 Procesando recomendación...
               </div>

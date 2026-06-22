@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import { SocioRepartidor } from '../types';
 import { Shield, TrendingUp, Award, Clock, Star, Activity, AlertTriangle } from 'lucide-react';
+import { BrandIllustration } from './BrandComponents';
 
 interface DriverReputationViewProps {
   drivers: SocioRepartidor[];
@@ -81,8 +82,13 @@ export const DriverReputationView: React.FC<DriverReputationViewProps> = ({ driv
         </div>
       </header>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {reputationData.map(driver => (
+      {reputationData.length === 0 ? (
+        <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-sm flex items-center justify-center min-h-[400px]">
+          <BrandIllustration title="Sin Repartidores" message="No existen movimientos" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          {reputationData.map(driver => (
           <div key={driver.id} className="bg-white p-8 lg:p-10 rounded-[3.5rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:border-black/5 transition-colors">
              
              {/* Gradient Accent Bar */}
@@ -153,7 +159,8 @@ export const DriverReputationView: React.FC<DriverReputationViewProps> = ({ driv
 
           </div>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

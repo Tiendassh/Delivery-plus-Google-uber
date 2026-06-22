@@ -21,6 +21,7 @@ import { notificationService } from '../services/notificationService';
 import { mockApi } from '../services/mockApi';
 import { Transaccion } from '../types';
 import { GoogleGenAI } from "@google/genai";
+import { BrandWatermark } from './BrandComponents';
 
 type SubWalletType = 'delivery-plus' | 'repartidor' | 'comercio' | 'administrador';
 
@@ -317,8 +318,9 @@ const WalletView: React.FC = () => {
           
           {/* 1. BILLETERA DELIVERY PLUS (ESCROW RETENCION) */}
           {activeWallet === 'delivery-plus' && (
-            <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-sm space-y-10">
-              <div className="border-b border-slate-100 pb-6">
+            <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-sm space-y-10 relative overflow-hidden z-10">
+              <BrandWatermark opacity="opacity-[0.05]" className="top-1/2" />
+              <div className="border-b border-slate-100 pb-6 relative z-10">
                 <span className="px-3.5 py-1 bg-blue-50 text-plus-blue rounded-full text-[9px] font-black uppercase tracking-wider">
                   MÓDULO DE ESCROW CENTRAL
                 </span>
@@ -430,8 +432,9 @@ const WalletView: React.FC = () => {
 
           {/* 2. BILLETERA REPARTIDOR */}
           {activeWallet === 'repartidor' && (
-            <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-sm space-y-10 animate-in slide-in-from-right duration-300">
-              <div className="border-b border-slate-100 pb-6 flex justify-between items-start flex-wrap gap-4">
+            <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-sm space-y-10 animate-in slide-in-from-right duration-300 relative overflow-hidden z-10">
+              <BrandWatermark opacity="opacity-[0.05]" className="top-1/2" />
+              <div className="border-b border-slate-100 pb-6 flex justify-between items-start flex-wrap gap-4 relative z-10">
                 <div>
                   <span className="px-3 py-1 bg-yellow-50 text-amber-800 rounded-full text-[9px] font-black uppercase tracking-wider">
                     Socio: Ramiro Tech (Rider Diamante)
@@ -564,8 +567,9 @@ const WalletView: React.FC = () => {
 
           {/* 3. BILLETERA COMERCIO */}
           {activeWallet === 'comercio' && (
-            <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-sm space-y-10 animate-in slide-in-from-right duration-300">
-              <div className="border-b border-slate-100 pb-6 flex justify-between items-start flex-wrap gap-4">
+            <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-sm space-y-10 animate-in slide-in-from-right duration-300 relative overflow-hidden z-10">
+              <BrandWatermark opacity="opacity-[0.05]" className="top-1/2" />
+              <div className="border-b border-slate-100 pb-6 flex justify-between items-start flex-wrap gap-4 relative z-10">
                 <div>
                   <span className="px-3 py-1 bg-violet-50 text-indigo-700 rounded-full text-[9px] font-black uppercase tracking-wider">
                     Establecimiento: Hamburguesas Posadas (Plan Oro)
@@ -625,8 +629,9 @@ const WalletView: React.FC = () => {
 
           {/* 4. BILLETERA ADMINISTRADOR */}
           {activeWallet === 'administrador' && (
-            <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-sm space-y-10 animate-in slide-in-from-right duration-300">
-              <div className="border-b border-slate-100 pb-6">
+            <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-sm space-y-10 animate-in slide-in-from-right duration-300 relative overflow-hidden z-10">
+              <BrandWatermark opacity="opacity-[0.05]" className="top-1/2" />
+              <div className="border-b border-slate-100 pb-6 relative z-10">
                 <span className="px-3 py-1 bg-rose-50 text-rose-700 rounded-full text-[9px] font-black uppercase tracking-wider">
                   Solo Operadores Centrales Autorizados • Nivel 1
                 </span>

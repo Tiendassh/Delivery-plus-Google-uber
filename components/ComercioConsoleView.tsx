@@ -3,6 +3,7 @@ import { SocioRepartidor, Pedido, EstadoPedido } from '../types';
 import { WeatherWidget3D } from './WeatherWidget3D';
 import { MiniTrackingMap } from './MiniTrackingMap';
 import { IARecomendationBlock } from './IARecomendationBlock';
+import { CorporateBrandPanel } from './BrandComponents';
 
 interface ComercioConsoleProps {
   repartidores: SocioRepartidor[];
@@ -106,10 +107,12 @@ export const ComercioConsoleView: React.FC<ComercioConsoleProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-12 animate-in fade-in duration-500">
+    <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-8 items-start animate-in fade-in duration-500">
       
-      {/* Header and Turn status */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      {/* 70% Contenido: Información Operativa */}
+      <div className="flex flex-col gap-12 w-full">
+        {/* Header and Turn status */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <span className="px-3 py-1 bg-amber-100 text-amber-800 font-black text-[8px] uppercase tracking-[0.2em] rounded-md border border-amber-200">
             Ficha del Comercio Adherido
@@ -408,6 +411,12 @@ export const ComercioConsoleView: React.FC<ComercioConsoleProps> = ({
             </div>
           ))}
         </div>
+      </div>
+      </div>
+      
+      {/* 30% Branding corporativo */}
+      <div className="hidden xl:block h-[calc(100vh-140px)] sticky top-28">
+        <CorporateBrandPanel />
       </div>
 
     </div>

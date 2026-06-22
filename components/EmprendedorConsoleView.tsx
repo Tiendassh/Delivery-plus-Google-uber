@@ -3,6 +3,7 @@ import { SocioRepartidor, Pedido, EstadoPedido } from '../types';
 import { WeatherWidget3D } from './WeatherWidget3D';
 import { MiniTrackingMap } from './MiniTrackingMap';
 import { IARecomendationBlock } from './IARecomendationBlock';
+import { CorporateBrandPanel } from './BrandComponents';
 
 interface EmprendedorConsoleProps {
   repartidores: SocioRepartidor[];
@@ -91,10 +92,12 @@ export const EmprendedorConsoleView: React.FC<EmprendedorConsoleProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-12 animate-in fade-in duration-500">
+    <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-8 items-start animate-in fade-in duration-500">
       
-      {/* Header and simple status */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      {/* 70% Contenido: Información Operativa */}
+      <div className="flex flex-col gap-12 w-full">
+        {/* Header and simple status */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <span className="px-3 py-1 bg-green-100 text-green-800 font-black text-[8px] uppercase tracking-[0.2em] rounded-md border border-green-200">
             Ficha para Micro-Emprendedores y Páginas de Venta
@@ -343,7 +346,12 @@ export const EmprendedorConsoleView: React.FC<EmprendedorConsoleProps> = ({
             ))}
           </div>
         </div>
-
+      </div>
+      </div>
+      
+      {/* 30% Branding corporativo */}
+      <div className="hidden xl:block h-[calc(100vh-140px)] sticky top-28">
+        <CorporateBrandPanel />
       </div>
 
     </div>

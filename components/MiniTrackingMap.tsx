@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapPin, Navigation, Car, Package } from 'lucide-react';
+import { BrandWatermark } from './BrandComponents';
 
 interface MiniTrackingMapProps {
   role: 'REPARTIDOR' | 'COMERCIO' | 'EMPRENDEDOR';
@@ -8,6 +9,10 @@ interface MiniTrackingMapProps {
 export const MiniTrackingMap: React.FC<MiniTrackingMapProps> = ({ role }) => {
   return (
     <div className="relative w-full h-[300px] md:h-[400px] bg-[#0A0A0A] rounded-[2rem] border border-dp-border overflow-hidden">
+      
+      {/* Brand Isotipo - Bottom Right Map Watermark */}
+      <BrandWatermark opacity="opacity-20" className="top-auto left-auto bottom-0 right-0 w-48 h-48" />
+
       {/* Fake Map Background (Dark Mode) */}
       <div 
         className="absolute inset-0 opacity-40 bg-cover bg-center"

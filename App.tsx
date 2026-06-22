@@ -11,10 +11,13 @@ import { AssistantIAView } from './components/AssistantIAView';
 import WalletView from './components/WalletView';
 import MobileSimulator from './components/MobileSimulator';
 import DriverReputationView from './components/DriverReputationView';
+import { AboutView } from './components/AboutView';
 // Additional components as needed
 import { apiService } from './services/apiService';
 import { notificationService } from './services/notificationService';
 import { Pedido, EstadoPedido, SocioRepartidor, Comercio } from './types';
+
+import { BrandWatermark } from './components/BrandComponents';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -69,8 +72,12 @@ const App: React.FC = () => {
   if (!user) return <LoginView onLogin={setUser} />;
 
   if (cargando && pedidos.length === 0) return (
-    <div className="h-screen bg-dp-background flex flex-col items-center justify-center">
-       <h1 className="text-4xl font-black text-white italic animate-pulse">Delivery<span className="text-dp-primary">Plus</span></h1>
+    <div className="fixed inset-0 bg-[#0B0D14] flex flex-col items-center justify-center overflow-hidden z-[9999] animate-in fade-in duration-2000">
+       <BrandWatermark opacity="opacity-20 blur-sm scale-110" />
+       <div className="relative z-20 text-center">
+         <h1 className="text-6xl font-black text-white italic tracking-tighter shadow-2xl">Delivery<span className="text-plus-blue">Plus</span></h1>
+         <p className="text-plus-blue font-bold uppercase tracking-[0.4em] text-xs mt-4">Inicializando Red Neuronal...</p>
+       </div>
     </div>
   );
 
@@ -128,6 +135,8 @@ const App: React.FC = () => {
         {activeView === 'perfil' && (
            <DriverReputationView drivers={repartidores} />
         )}
+        
+        {activeView === 'acerca' && <AboutView />}
         
       </div>
     </Layout>
