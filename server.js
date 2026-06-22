@@ -2,50 +2,51 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { GoogleGenAI } from '@google/genai';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+async function startServer() {
+  const app = express();
+  const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'dist')));
+  app.use(express.json());
 
-// --- DATA STORE (PERSISTENCIA EN MEMORIA) ---
-let orders = [
-  { 
-    id: 1001, 
-    detalles: "Repuestos Industriales (Caja 20kg)", 
-    tipoEntrega: 'PAQUETERIA', 
-    nombreCliente: "Ferretería Central", 
-    estado: 'PENDIENTE', 
-    idRepartidor: null, 
-    idComercio: 1, 
-    monto: 15500, 
-    gananciaChofer: 3200, 
-    viaticoCombustible: 800, 
-    metodoPago: 'Transferencia', 
-    creadoEn: new Date().toISOString(), 
-    latUsuario: -27.375, 
-    lngUsuario: -55.905, 
-    latitud: -27.368, 
-    longitud: -55.895, 
-    esNocturno: false,
-    historialLegal: [],
-    chatDirecto: []
-  }
-];
+  // --- DATA STORE (PERSISTENCIA EN MEMORIA) ---
+  let orders = [
+    { 
+      id: 1001, 
+      detalles: "Repuestos Industriales (Caja 20kg)", 
+      tipoEntrega: 'PAQUETERIA', 
+      nombreCliente: "Ferretería Central", 
+      estado: 'PENDIENTE', 
+      idRepartidor: null, 
+      idComercio: 1, 
+      monto: 15500, 
+      gananciaChofer: 3200, 
+      viaticoCombustible: 800, 
+      metodoPago: 'Transferencia', 
+      creadoEn: new Date().toISOString(), 
+      latUsuario: -27.375, 
+      lngUsuario: -55.905, 
+      latitud: -27.368, 
+      longitud: -55.895, 
+      esNocturno: false,
+      historialLegal: [],
+      chatDirecto: []
+    }
+  ];
 
-let drivers = [
-  { id: 1, nombre: "Ramiro Tech", vehiculo: "Moto", patente: "A099BCD", puntos: 500, calificacion: 4.9, gananciasSemanales: 120000, nivel: 'DIAMANTE', latitud: -27.370, longitud: -55.890, monotributoActivo: true, polizaSeguro: "VIGENTE", etapaIngreso: 'ACTIVO', tieneKitPaqueteria: true, reseñas: [] }
-];
+  let drivers = [
+    { id: 1, nombre: "Ramiro Tech", vehiculo: "Moto", patente: "A099BCD", puntos: 500, calificacion: 4.9, gananciasSemanales: 120000, nivel: 'DIAMANTE', latitud: -27.370, longitud: -55.890, monotributoActivo: true, polizaSeguro: "VIGENTE", etapaIngreso: 'ACTIVO', tieneKitPaqueteria: true, reseñas: [] }
+  ];
 
-let stores = [
-  { id: 1, nombre: "Ferretería Central", categoria: "Ferretería", lat: -27.368, lng: -55.895, plan: 'DIAMANTE', cantidadPedidos: 450, estado: 'ACTIVO', demandaActual: 'ALTA' }
-];
+  let stores = [
+    { id: 1, nombre: "Ferretería Central", categoria: "Ferretería", lat: -27.368, lng: -55.895, plan: 'DIAMANTE', cantidadPedidos: 450, estado: 'ACTIVO', demandaActual: 'ALTA' }
+  ];
 
-// --- API ENDPOINTS ---
+  // --- API ENDPOINTS ---
 
 // Orders
 app.get('/api/orders', (req, res) => res.json(orders));
@@ -87,7 +88,6 @@ app.post('/api/stores', (req, res) => {
 });
 
 // --- GEMINI REST PROXY FOR CHAT IA ---
-const { GoogleGenAI } = require("@google/genai");
 
 app.post('/api/gemini/chat', async (req, res) => {
   const { messages: currentMessages, systemInstruction } = req.body;
@@ -101,14 +101,51 @@ app.post('/api/gemini/chat', async (req, res) => {
     const ai = new GoogleGenAI({ apiKey });
     
     // Map messages payload to contents
-    const contents = currentMessages.map(m => ({
+    let contents = currentMessages.map(m => ({
       role: m.sender === 'user' ? 'user' : 'model',
       parts: [{ text: m.text }]
     }));
 
+    // Gemini API requires the conversation history to start with a 'user' role
+    // and maintain alternating roles.
+    let validContents = [];
+    let expectedRole = 'user';
+    
+    // We process backwards to keep the most recent messages, then reverse
+    for (let i = contents.length - 1; i >= 0; i--) {
+      // If we are looking for a model message but get a user message, we can just prepend it
+      // But if we want alternating, it's safer to just take everything and let Gemini handle if it's relaxed, 
+      // OR we just ensure the first message is 'user' by shifting if 'model'.
+    }
+    
+    // Simple fix: if the first message is 'model', just remove it.
+    if (contents.length > 0 && contents[0].role === 'model') {
+      contents.shift();
+    }
+    
+    // If there are consecutive elements of the same role, it might error.
+    // Let's rebuild the array strictly alternating, ending with the last user message.
+    const strictContents = [];
+    if (contents.length > 0) {
+      let lastRole = null;
+      for (const msg of contents) {
+        if (msg.role !== lastRole) {
+          strictContents.push(msg);
+          lastRole = msg.role;
+        } else {
+          // If we have two of the same role in a row, combine their text
+          strictContents[strictContents.length - 1].parts[0].text += '\n\n' + msg.parts[0].text;
+        }
+      }
+    }
+    
+    if (strictContents.length > 0 && strictContents[0].role === 'model') {
+      strictContents.shift();
+    }
+
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: contents,
+      model: 'gemini-2.5-flash',
+      contents: strictContents.length > 0 ? strictContents : [{role: 'user', parts: [{text: 'Hola'}]}],
       config: {
         systemInstruction: systemInstruction,
         temperature: 0.7
@@ -307,13 +344,26 @@ app.post('/api/v1/orders/:id/deliver', (req, res) => {
 app.get('/api/v1/drivers', (req, res) => res.json(drivers));
 app.get('/api/v1/stores', (req, res) => res.json(stores));
 
-// Health
-app.get('/health', (req, res) => {
-  res.json({ status: 'ONLINE', nodes: { orders: orders.length, drivers: drivers.length } });
-});
+  // Health
+  app.get('/health', (req, res) => {
+    res.json({ status: 'ONLINE', nodes: { orders: orders.length, drivers: drivers.length } });
+  });
 
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'dist', 'index.html')));
+  if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    app.use(express.static(path.join(__dirname, 'dist')));
+    app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'dist', 'index.html')));
+  }
 
-app.listen(PORT, () => {
-  console.log(`[BACKEND] Delivery Plus Neural Logistics operativo en puerto ${PORT}`);
-});
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[BACKEND] Delivery Plus Neural Logistics operativo en puerto ${PORT}`);
+  });
+}
+
+startServer();
