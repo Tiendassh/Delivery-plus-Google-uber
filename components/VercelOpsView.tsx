@@ -50,7 +50,7 @@ const InfrastructureOpsView: React.FC = () => {
       const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         contents: `Genera una configuración de Nginx para una VPS Linux que sirve una app React en el puerto 3000. El dominio es ${domain}. Incluye configuración para proxy_pass y headers de seguridad.`
       });
       setNginxConfig(response.text ?? null);

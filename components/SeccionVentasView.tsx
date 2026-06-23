@@ -40,7 +40,7 @@ const SeccionVentasView: React.FC<SeccionVentasProps> = ({ activeOrders }) => {
       const ai = new GoogleGenAI({ apiKey });
       const conversation = currentChat.mensajes.map(m => `${m.emisorNombre}: ${m.texto}`).join('\n');
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         contents: `Resume esta conversación de logística en 3 puntos clave: \n${conversation}`
       });
       setSummary(response.text || null);

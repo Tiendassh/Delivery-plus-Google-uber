@@ -12,6 +12,7 @@ import WalletView from './components/WalletView';
 import MobileSimulator from './components/MobileSimulator';
 import DriverReputationView from './components/DriverReputationView';
 import { AboutView } from './components/AboutView';
+import { VoiceCenterView } from './components/VoiceCenterView';
 // Additional components as needed
 import { apiService } from './services/apiService';
 import { notificationService } from './services/notificationService';
@@ -131,6 +132,8 @@ const App: React.FC = () => {
         
         {activeRole === 'IA_ASISTENTE' && activeView === 'chat' && <AssistantIAView />}
         
+        {activeView === 'voz_ia' && <VoiceCenterView activeRole={activeRole} />}
+
         {/* Fill other sections smoothly inside the new dark theme */}
         {activeView === 'perfil' && (
            <DriverReputationView drivers={repartidores} />

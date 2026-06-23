@@ -83,7 +83,7 @@ const WalletView: React.FC = () => {
           Brindá en español un solo consejo financiero, directo y muy corto, en tono corporativo elegante y profesional. Máximo 25 palabras.
         `;
         const response = await ai.models.generateContent({
-          model: 'gemini-3.5-flash',
+          model: 'gemini-2.5-flash',
           contents: { role: 'user', parts: [{ text: summaryText }] }
         });
         setIaAdvice(response.text?.trim() || "La liquidez actual es óptima. Mantener los sumarios de retención de comisiones activos.");

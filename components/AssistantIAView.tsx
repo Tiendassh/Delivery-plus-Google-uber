@@ -185,7 +185,7 @@ export const AssistantIAView: React.FC = () => {
       setMessages(prev => [...prev, aiMsg]);
       voiceService.speak(aiText, selectedVoice);
     } catch (error) {
-      console.error('Gemini Error in IA Assistant:', error);
+      console.warn('Gemini Error in IA Assistant:', error);
       
       const aiMsg: Message = {
         id: `ai-error-${Date.now()}`,

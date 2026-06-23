@@ -109,6 +109,17 @@ const Layout: React.FC<Props> = ({ children, activeRole, setActiveRole, activeVi
 
                <button
                  onClick={() => {
+                   setActiveView('voz_ia');
+                   setIsDrawerOpen(false);
+                 }}
+                 className="w-full flex items-center gap-4 px-4 py-4 rounded-xl font-medium transition-colors text-dp-textMuted hover:text-white hover:bg-dp-surfaceLight"
+               >
+                 <Bot size={20} className="text-dp-textMuted group-hover:text-white" />
+                 Configuración Voz IA
+               </button>
+
+               <button
+                 onClick={() => {
                    setActiveView('acerca');
                    setIsDrawerOpen(false);
                  }}

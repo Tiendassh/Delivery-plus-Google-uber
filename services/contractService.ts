@@ -1,7 +1,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-const MODEL = 'gemini-3-pro-preview';
+const MODEL = 'gemini-2.5-pro';
 
 export const generateSmartContract = async (clientData: string) => {
   try {

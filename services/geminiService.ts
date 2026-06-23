@@ -1,8 +1,8 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-const PRO_MODEL = 'gemini-3-pro-preview'; 
-const FLASH_MODEL = 'gemini-3-flash-preview';
+const PRO_MODEL = 'gemini-2.5-pro'; 
+const FLASH_MODEL = 'gemini-2.5-flash';
 
 export interface ChatMessage {
   role: 'user' | 'model';
@@ -21,11 +21,11 @@ export const getLogisticsInsights = async (summary: string) => {
       }
     });
     return response.text || "Operativa estable. Red sincronizada.";
-  } catch (err: any) {
+    } catch (err: any) {
     if (err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
       return "Cuota de IA excedida. Reintentando en breve...";
     }
-    console.error("Gemini Insight Error:", err);
+    console.warn("Gemini Insight Error:", err);
     return "Analizando flujos neuronales...";
   }
 };
@@ -47,7 +47,7 @@ export const chatWithStrategist = async (history: ChatMessage[], message: string
     if (err.message?.includes('429')) {
       return "El sistema está saturado. Por favor, selecciona una API Key con facturación activa en la configuración.";
     }
-    console.error("Gemini Strategist Error:", err);
+    console.warn("Gemini Strategist Error:", err);
     return "Error en el enlace estratégico. Reintentando conexión segura...";
   }
 };

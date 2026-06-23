@@ -155,8 +155,12 @@ app.post('/api/gemini/chat', async (req, res) => {
     const aiText = response.text || "Hubo un error al generar la respuesta.";
     res.json({ text: aiText });
   } catch (error) {
-    console.error("[Gemini API Proxy Error]:", error);
-    res.status(500).json({ error: error.message || "Error interno llamando a Gemini." });
+    if (error.message && error.message.includes('503')) {
+      console.warn("[Gemini API Proxy Warning]: High demand, 503 Service Unavailable");
+    } else {
+      console.warn("[Gemini API Proxy Error]:", error.message || error);
+    }
+    res.status(503).json({ error: error.message || "Error interno llamando a Gemini." });
   }
 });
 
@@ -192,7 +196,7 @@ app.get('/api/v1/weather/now', async (req, res) => {
         : "Operativa Logística Estable"
     });
   } catch (error) {
-    console.error('[Weather Proxy Error]:', error);
+    console.warn('[Weather Proxy Error]:', error.message || error);
     return res.json({
       temp: 24,
       rainProb: 20,
@@ -206,8 +210,8 @@ app.get('/api/v1/weather/now', async (req, res) => {
 app.post('/api/elevenlabs/tts', async (req, res) => {
   const { text, voiceProfile } = req.body;
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  const valentinaVoiceId = process.env.ELEVENLABS_VALENTINA_VOICE_ID;
-  const mateoVoiceId = process.env.ELEVENLABS_MATEO_VOICE_ID;
+  let valentinaVoiceId = process.env.ELEVENLABS_VALENTINA_VOICE_ID;
+  let mateoVoiceId = process.env.ELEVENLABS_MATEO_VOICE_ID;
 
   if (!apiKey || apiKey.trim() === '' || apiKey.includes('YOUR_')) {
     return res.status(400).json({ error: 'La API Key de ElevenLabs no está configurada.' });
@@ -216,54 +220,58 @@ app.post('/api/elevenlabs/tts', async (req, res) => {
   if (!text) {
     return res.status(400).json({ error: 'Se requiere el campo "text"' });
   }
+  
+  if (!mateoVoiceId) mateoVoiceId = '4wDRKlxcHNOFO5kBvE81'; // Default
+  if (!valentinaVoiceId) valentinaVoiceId = 'ByVRQtaK1WDOvTmP1PKO'; // Default
 
   let voiceId = mateoVoiceId;
-  let voiceSettings = {
-    stability: 0.75,
-    similarity_boost: 0.85,
-    style: 0.25,
-    use_speaker_boost: true
-  };
-
   if (voiceProfile === 'valentina' || voiceProfile === 'agustina') {
     voiceId = valentinaVoiceId;
-    voiceSettings = {
-      stability: 0.60,
-      similarity_boost: 0.80,
-      style: 0.45,
-      use_speaker_boost: true
-    };
-  }
-
-  if (!voiceId) {
-    return res.status(400).json({ error: `El Voice ID para el perfil ${voiceProfile} no está configurado.` });
   }
 
   try {
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
-      method: 'POST',
-      headers: {
-        'xi-api-key': apiKey,
-        'Content-Type': 'application/json',
-        'Accept': 'audio/mpeg'
-      },
-      body: JSON.stringify({
-        text: text,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: voiceSettings
-      })
+    const { ElevenLabsClient } = await import('@elevenlabs/elevenlabs-js');
+    const elevenlabs = new ElevenLabsClient({ apiKey });
+
+    console.log(`[ElevenLabs TTS Proxy] Inicializando conversión para voiceId: ${voiceId}`);
+    
+    // Returns a stream or a readable
+    const audioStream = await elevenlabs.textToSpeech.convert(voiceId, {
+      text: text,
+      model_id: 'eleven_multilingual_v2',
+      output_format: 'mp3_44100_128',
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`ElevenLabs TTS Error ${response.status}: ${errorText}`);
-    }
-
-    const buffer = await response.arrayBuffer();
+    console.log(`[ElevenLabs TTS Proxy] Respuesta de stream generada correctamente.`);
     res.set('Content-Type', 'audio/mpeg');
-    return res.send(Buffer.from(buffer));
+
+    if (audioStream && typeof audioStream.pipe === 'function') {
+      audioStream.pipe(res);
+    } else {
+      // It's probably a Blob, Buffer or ArrayBuffer
+      let buffer;
+      if (audioStream instanceof Buffer) {
+        buffer = audioStream;
+      } else if (audioStream.arrayBuffer) {
+        buffer = Buffer.from(await audioStream.arrayBuffer());
+      } else if (typeof audioStream === 'object' && audioStream !== null) {
+        // Collect stream if it's an async iterable
+        const chunks = [];
+        for await (const chunk of audioStream) {
+          chunks.push(chunk);
+        }
+        buffer = Buffer.concat(chunks);
+      } else {
+        buffer = Buffer.from(audioStream);
+      }
+      res.send(buffer);
+    }
   } catch (error) {
-    console.error('[ElevenLabs TTS Proxy Error]:', error);
+    if (error.message && error.message.includes('payment_required')) {
+      console.warn('[ElevenLabs TTS Proxy Warning]: Free tier limit or premium voice requested.');
+    } else {
+      console.warn('[ElevenLabs TTS Proxy Error]:', error.message || error);
+    }
     return res.status(500).json({ error: 'Error al generar síntesis de voz con ElevenLabs.' });
   }
 });

@@ -10,7 +10,9 @@ export const voiceService = {
       });
 
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        // We log silently and fallback.
+        console.info('[VoiceService] ElevenLabs TTS unavailable, falling back...');
+        throw new Error('ElevenLabs unavailable');
       }
 
       const blob = await response.blob();
@@ -19,12 +21,18 @@ export const voiceService = {
       
       return new Promise((resolve, reject) => {
         audio.onended = () => resolve();
-        audio.onerror = (e) => reject(e);
-        audio.play().catch(reject);
+        audio.onerror = (e) => {
+           console.info('[VoiceService] Audio playback error.', e);
+           resolve(); // Resolve anyway to not break the flow
+        };
+        audio.play().catch(e => {
+            console.info('[VoiceService] Play blocked by browser, ignoring.', e);
+            resolve();
+        });
       });
     } catch (error) {
-      console.warn('ElevenLabs TTS failed, falling back to Web Speech API', error);
-      return new Promise((resolve, reject) => {
+      // Fallback
+      return new Promise((resolve) => {
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(text);
@@ -39,7 +47,7 @@ export const voiceService = {
           }
 
           utterance.onend = () => resolve();
-          utterance.onerror = (e) => reject(e);
+          utterance.onerror = () => resolve();
           window.speechSynthesis.speak(utterance);
         } else {
           resolve(); // Fallback resolving if neither works
