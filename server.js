@@ -206,7 +206,80 @@ app.get('/api/v1/weather/now', async (req, res) => {
   }
 });
 
-// --- ELEVENLABS TTS PROXY ---
+// --- AZURE TTS PROXY ---
+app.post('/api/azure/tts', async (req, res) => {
+  try {
+    const { text, voiceProfile } = req.body;
+    const apiKey = process.env.AZURE_SPEECH_KEY;
+    let region = process.env.AZURE_SPEECH_REGION || 'brazilsouth';
+    region = region.trim(); // remove any newlines/spaces
+
+    if (!apiKey || apiKey.trim() === '' || apiKey.includes('YOUR_')) {
+      console.warn('[Azure] API Key is missing or invalid.');
+      return res.status(400).json({ error: 'La API Key de Azure no está configurada.' });
+    }
+
+    if (!text) {
+      return res.status(400).json({ error: 'Se requiere el campo "text"' });
+    }
+
+    // Select Azure voice
+    let voiceName = 'es-AR-TomasNeural'; 
+    if (voiceProfile === 'valentina' || voiceProfile === 'agustina') {
+      voiceName = 'es-AR-ElenaNeural'; 
+    }
+
+    const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="es-AR"><voice name="${voiceName}">${text}</voice></speak>`;
+
+    let ttsUrl = `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
+    if (region.startsWith('http') || region.includes('.')) {
+        console.warn(`[Azure TTS Proxy] La región provista no parece válida (${region}). Se usará 'brazilsouth' por defecto.`);
+        ttsUrl = `https://brazilsouth.tts.speech.microsoft.com/cognitiveservices/v1`;
+    }
+
+    console.log(`[Azure TTS Proxy] Generando voz para ${voiceName} usando URL: ${ttsUrl}`);
+    
+    const https = await import('https');
+    const { URL } = await import('url');
+    
+    return new Promise((resolve, reject) => {
+      const parsedUrl = new URL(ttsUrl);
+      const reqApi = https.request({
+        method: 'POST',
+        hostname: parsedUrl.hostname,
+        path: parsedUrl.pathname,
+        headers: {
+          'Ocp-Apim-Subscription-Key': apiKey,
+          'Content-Type': 'application/ssml+xml',
+          'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3',
+          'User-Agent': 'DeliveryPlusNodeServer',
+          'Content-Length': Buffer.byteLength(ssml)
+        }
+      }, (resApi) => {
+        if (resApi.statusCode !== 200) {
+          console.error('[Azure TTS Proxy Error]:', resApi.statusCode, resApi.statusMessage);
+          res.status(resApi.statusCode).json({ error: `Error desde Azure: ${resApi.statusMessage}` });
+          return resolve();
+        }
+        res.set('Content-Type', 'audio/mpeg');
+        resApi.pipe(res);
+        resApi.on('end', () => resolve());
+      });
+      
+      reqApi.on('error', (error) => {
+        console.error('[Azure TTS Proxy Exception]:', error.message || error);
+        res.status(500).json({ error: `Error con Azure: ${error.message || 'Desconocido'}` });
+        resolve();
+      });
+      
+      reqApi.write(ssml);
+      reqApi.end();
+    });
+  } catch (error) {
+    console.error('[Azure TTS Proxy Exception]:', error.message || error);
+    return res.status(500).json({ error: `Error con Azure: ${error.message || 'Desconocido'}` });
+  }
+});
 app.post('/api/elevenlabs/tts', async (req, res) => {
   const { text, voiceProfile } = req.body;
   const apiKey = process.env.ELEVENLABS_API_KEY;
@@ -214,15 +287,18 @@ app.post('/api/elevenlabs/tts', async (req, res) => {
   let mateoVoiceId = process.env.ELEVENLABS_MATEO_VOICE_ID;
 
   if (!apiKey || apiKey.trim() === '' || apiKey.includes('YOUR_')) {
+    console.warn('[ElevenLabs] API Key is missing or invalid.');
     return res.status(400).json({ error: 'La API Key de ElevenLabs no está configurada.' });
   }
+  
+  console.log(`[ElevenLabs TTS Proxy] Uso de API Key detectada, longitud: ${apiKey.length}, prefijo: ${apiKey.substring(0, 4)}...`);
 
   if (!text) {
     return res.status(400).json({ error: 'Se requiere el campo "text"' });
   }
   
-  if (!mateoVoiceId) mateoVoiceId = '4wDRKlxcHNOFO5kBvE81'; // Default
-  if (!valentinaVoiceId) valentinaVoiceId = 'ByVRQtaK1WDOvTmP1PKO'; // Default
+  if (!mateoVoiceId) mateoVoiceId = 'AvFwmpNEfWWu5mtNDqhH'; // Default Ignacio (Mateo)
+  if (!valentinaVoiceId) valentinaVoiceId = '9oPKasc15pfAbMr7N6Gs'; // Default Melisa (Valentina)
 
   let voiceId = mateoVoiceId;
   if (voiceProfile === 'valentina' || voiceProfile === 'agustina') {
@@ -269,10 +345,14 @@ app.post('/api/elevenlabs/tts', async (req, res) => {
   } catch (error) {
     if (error.message && error.message.includes('payment_required')) {
       console.warn('[ElevenLabs TTS Proxy Warning]: Free tier limit or premium voice requested.');
+      return res.status(402).json({ error: 'ElevenLabs requiere un plan de pago para clonar voces o usar voces de la biblioteca mediante API.' });
+    } else if (error.message && error.message.includes('quota_exceeded')) {
+      console.warn('[ElevenLabs TTS Proxy Warning]: Cuota excedida.');
+      return res.status(401).json({ error: 'Se agotó el saldo/créditos de tu cuenta de ElevenLabs.' });
     } else {
       console.warn('[ElevenLabs TTS Proxy Error]:', error.message || error);
     }
-    return res.status(500).json({ error: 'Error al generar síntesis de voz con ElevenLabs.' });
+    return res.status(500).json({ error: `Error con ElevenLabs: ${error.message || 'Desconocido'}` });
   }
 });
 

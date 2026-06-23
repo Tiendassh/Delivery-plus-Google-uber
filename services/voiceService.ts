@@ -3,16 +3,17 @@ type VoiceProfile = 'valentina' | 'mateo' | 'agustina';
 export const voiceService = {
   async speak(text: string, voiceProfile: VoiceProfile = 'mateo'): Promise<void> {
     try {
-      const response = await fetch('/api/elevenlabs/tts', {
+      // Make a call to Azure via proxy. We switch from /api/elevenlabs/tts to /api/azure/tts
+      const response = await fetch('/api/azure/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, voiceProfile })
       });
 
       if (!response.ok) {
-        // We log silently and fallback.
-        console.info('[VoiceService] ElevenLabs TTS unavailable, falling back...');
-        throw new Error('ElevenLabs unavailable');
+        const errData = await response.json().catch(() => ({}));
+        console.warn('[VoiceService] Azure Error:', errData.error || response.statusText);
+        throw new Error('Azure TTS unavailable');
       }
 
       const blob = await response.blob();
