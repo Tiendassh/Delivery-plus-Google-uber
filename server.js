@@ -285,8 +285,8 @@ app.post('/api/kokoro/tts', async (req, res) => {
     const { text, voiceProfile } = req.body;
     
     // Si tienes Kokoro deployado en Render, puedes poner su URL en esta variable de entorno:
-    // KOKORO_API_URL=https://tu-kokoro-en-render.onrender.com/v1/audio/speech
-    const kokoroUrl = process.env.KOKORO_API_URL || 'http://localhost:8880/v1/audio/speech';
+    // KOKORO_API_URL=https://kokoro-fastapi-ncb7.onrender.com/v1/audio/speech
+    const kokoroUrl = process.env.KOKORO_API_URL || 'https://kokoro-fastapi-ncb7.onrender.com/v1/audio/speech';
     
     if (!text) {
       return res.status(400).json({ error: 'Se requiere el campo "text"' });
