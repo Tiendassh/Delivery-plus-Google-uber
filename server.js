@@ -320,8 +320,45 @@ app.post('/api/kokoro/tts', async (req, res) => {
     res.set('Content-Type', 'audio/mpeg');
     res.send(buffer);
   } catch (error) {
-    console.error('[Kokoro Proxy Exception]:', error.message || error);
-    return res.status(500).json({ error: 'No se pudo conectar con Kokoro. Asegúrate de que el contenedor esté corriendo.' });
+    if (error.message && (error.message.includes('fetch failed') || error.message.includes('ECONNREFUSED'))) {
+      console.warn('[Kokoro Proxy Warning]: Kokoro TTS no disponible en la URL configurada.');
+    } else {
+      console.error('[Kokoro Proxy Exception]:', error.message || error);
+    }
+    return res.status(503).json({ error: 'No se pudo conectar con Kokoro.' });
+  }
+});
+
+app.post('/api/piper/tts', async (req, res) => {
+  try {
+    const { text, voiceProfile } = req.body;
+    const piperUrl = process.env.PIPER_API_URL || 'http://localhost:5000/api/tts';
+    
+    if (!text) {
+      return res.status(400).json({ error: 'Se requiere el campo "text"' });
+    }
+
+    // Piper TTS request format (example, could vary)
+    const response = await fetch(piperUrl + '?text=' + encodeURIComponent(text));
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('[Piper Proxy Error]:', response.status, err);
+      return res.status(response.status).json({ error: 'Error del servidor Piper' });
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    res.set('Content-Type', 'audio/mpeg');
+    res.send(buffer);
+  } catch (error) {
+    if (error.message && (error.message.includes('fetch failed') || error.message.includes('ECONNREFUSED'))) {
+      console.warn('[Piper Proxy Warning]: Piper TTS no disponible en la URL configurada.');
+    } else {
+      console.error('[Piper Proxy Exception]:', error.message || error);
+    }
+    return res.status(503).json({ error: 'No se pudo conectar con Piper.' });
   }
 });
 

@@ -20,13 +20,38 @@ export const voiceService = {
          return;
       } else {
          console.warn('[VoiceService] Kokoro no está corriendo o falló:', await kokoroResponse.text());
+         throw new Error('Kokoro TTS unavailable');
       }
     } catch (e) {
       console.warn('[VoiceService] Fetch a Kokoro falló:', (e as Error).message);
     }
 
     try {
-      // Fallback a ElevenLabs (por el Proxy de nuestro backend)
+      // Fallback 1: Piper TTS (Local/Remoto)
+      console.log(`[VoiceService] Intentando Piper TTS (Fallback)`);
+      const piperResponse = await fetch('/api/piper/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            text,
+            voiceProfile
+        })
+      });
+
+      if (piperResponse.ok) {
+         console.log('[VoiceService] Piper TTS Exitoso!');
+         await playBlob(await piperResponse.blob());
+         return;
+      } else {
+         console.warn('[VoiceService] Piper no está corriendo o falló:', await piperResponse.text());
+         throw new Error('Piper TTS unavailable');
+      }
+    } catch (e) {
+      console.warn('[VoiceService] Fetch a Piper falló:', (e as Error).message);
+    }
+
+    try {
+      // Fallback 2: ElevenLabs (Opcional)
       const response = await fetch('/api/elevenlabs/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
