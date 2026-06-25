@@ -3,8 +3,31 @@ type VoiceProfile = 'valentina' | 'mateo' | 'agustina';
 export const voiceService = {
   async speak(text: string, voiceProfile: VoiceProfile = 'mateo'): Promise<void> {
     try {
-      // Make a call to Azure via proxy. We switch from /api/elevenlabs/tts to /api/azure/tts
-      const response = await fetch('/api/azure/tts', {
+      // Intento primario: Kokoro-FastAPI (vía nuestro propio Proxy backend)
+      console.log(`[VoiceService] Intentando Kokoro local/remoto`);
+      const kokoroResponse = await fetch('/api/kokoro/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            text,
+            voiceProfile
+        })
+      });
+
+      if (kokoroResponse.ok) {
+         console.log('[VoiceService] Kokoro TTS Exitoso!');
+         await playBlob(await kokoroResponse.blob());
+         return;
+      } else {
+         console.warn('[VoiceService] Kokoro no está corriendo o falló:', await kokoroResponse.text());
+      }
+    } catch (e) {
+      console.warn('[VoiceService] Fetch a Kokoro falló:', (e as Error).message);
+    }
+
+    try {
+      // Fallback a ElevenLabs (por el Proxy de nuestro backend)
+      const response = await fetch('/api/elevenlabs/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, voiceProfile })
@@ -12,27 +35,13 @@ export const voiceService = {
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        console.warn('[VoiceService] Azure Error:', errData.error || response.statusText);
-        throw new Error('Azure TTS unavailable');
+        console.warn('[VoiceService] ElevenLabs Error:', errData.error || response.statusText);
+        throw new Error('ElevenLabs TTS unavailable');
       }
 
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      
-      return new Promise((resolve, reject) => {
-        audio.onended = () => resolve();
-        audio.onerror = (e) => {
-           console.info('[VoiceService] Audio playback error.', e);
-           resolve(); // Resolve anyway to not break the flow
-        };
-        audio.play().catch(e => {
-            console.info('[VoiceService] Play blocked by browser, ignoring.', e);
-            resolve();
-        });
-      });
+      await playBlob(await response.blob());
     } catch (error) {
-      // Fallback
+      // Fallback final: Navegador Nativo
       return new Promise((resolve) => {
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
@@ -57,3 +66,20 @@ export const voiceService = {
     }
   }
 };
+
+async function playBlob(blob: Blob): Promise<void> {
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    
+    return new Promise((resolve, reject) => {
+      audio.onended = () => resolve();
+      audio.onerror = (e) => {
+         console.info('[VoiceService] Audio playback error.', e);
+         resolve(); 
+      };
+      audio.play().catch(e => {
+          console.info('[VoiceService] Play blocked by browser, ignoring.', e);
+          resolve();
+      });
+    });
+}

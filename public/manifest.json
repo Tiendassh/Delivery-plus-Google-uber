@@ -1,0 +1,21 @@
+{
+  "name": "Delivery Plus",
+  "short_name": "Delivery+",
+  "description": "Plataforma logística inteligente impulsada por IA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F6F6F6",
+  "theme_color": "#276EF1",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -280,25 +280,68 @@ app.post('/api/azure/tts', async (req, res) => {
     return res.status(500).json({ error: `Error con Azure: ${error.message || 'Desconocido'}` });
   }
 });
+app.post('/api/kokoro/tts', async (req, res) => {
+  try {
+    const { text, voiceProfile } = req.body;
+    
+    // Si tienes Kokoro deployado en Render, puedes poner su URL en esta variable de entorno:
+    // KOKORO_API_URL=https://tu-kokoro-en-render.onrender.com/v1/audio/speech
+    const kokoroUrl = process.env.KOKORO_API_URL || 'http://localhost:8880/v1/audio/speech';
+    
+    if (!text) {
+      return res.status(400).json({ error: 'Se requiere el campo "text"' });
+    }
+
+    let kokoroVoice = 'am_michael'; // Default masculino
+    if (voiceProfile === 'valentina' || voiceProfile === 'agustina') {
+      kokoroVoice = 'af_bella'; // Default femenino
+    }
+
+    console.log(`[Kokoro Proxy] Solicitando voz a: ${kokoroUrl}`);
+    const response = await fetch(kokoroUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: "tts-1",
+        voice: kokoroVoice,
+        input: text
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('[Kokoro Proxy Error]:', response.status, err);
+      return res.status(response.status).json({ error: 'Error del servidor Kokoro' });
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    res.set('Content-Type', 'audio/mpeg');
+    res.send(buffer);
+  } catch (error) {
+    console.error('[Kokoro Proxy Exception]:', error.message || error);
+    return res.status(500).json({ error: 'No se pudo conectar con Kokoro. Asegúrate de que el contenedor esté corriendo.' });
+  }
+});
+
 app.post('/api/elevenlabs/tts', async (req, res) => {
   const { text, voiceProfile } = req.body;
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  let valentinaVoiceId = process.env.ELEVENLABS_VALENTINA_VOICE_ID;
-  let mateoVoiceId = process.env.ELEVENLABS_MATEO_VOICE_ID;
 
   if (!apiKey || apiKey.trim() === '' || apiKey.includes('YOUR_')) {
     console.warn('[ElevenLabs] API Key is missing or invalid.');
     return res.status(400).json({ error: 'La API Key de ElevenLabs no está configurada.' });
   }
   
-  console.log(`[ElevenLabs TTS Proxy] Uso de API Key detectada, longitud: ${apiKey.length}, prefijo: ${apiKey.substring(0, 4)}...`);
-
   if (!text) {
     return res.status(400).json({ error: 'Se requiere el campo "text"' });
   }
-  
-  if (!mateoVoiceId) mateoVoiceId = 'AvFwmpNEfWWu5mtNDqhH'; // Default Ignacio (Mateo)
-  if (!valentinaVoiceId) valentinaVoiceId = '9oPKasc15pfAbMr7N6Gs'; // Default Melisa (Valentina)
+
+  // Force pre-made voices that WORK on Free Plan (Roger & Sarah)
+  // We ignore .env voice IDs here because free plan blocks library voices.
+  let mateoVoiceId = 'CwhRBWXzGAHq8TQ4Fs17'; // Roger
+  let valentinaVoiceId = 'EXAVITQu4vr4xnSDxMaL'; // Sarah
 
   let voiceId = mateoVoiceId;
   if (voiceProfile === 'valentina' || voiceProfile === 'agustina') {
