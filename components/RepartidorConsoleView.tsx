@@ -25,33 +25,19 @@ export const RepartidorConsoleView: React.FC<RepartidorConsoleProps> = ({
   const [plate, setPlate] = useState<string>(repartidor.patente || 'A023BC4');
   const [profileSaved, setProfileSaved] = useState<boolean>(false);
 
-  // Available job listings (simulation)
-  const [availableJobs, setAvailableJobs] = useState([
-    { id: 'JOB-901', store: 'Rotisería Lo de Coco', type: 'ENVIO_COMIDA', payout: 3800, dist: '1.2 km', desc: 'Hamburguesa Gigante con Papas' },
-    { id: 'JOB-902', store: 'Distribuidora San Ignacio', type: 'ENVIO_PAQUETERIA', payout: 7500, dist: '4.8 km', desc: 'Bulto mediano de mercadería' },
-    { id: 'JOB-903', store: 'Farmacia de la Costa', type: 'ENVIO_PAQUETERIA', payout: 4200, dist: '2.5 km', desc: 'Medicamentos urgentes' },
-  ]);
+  // Available job listings
+  const [availableJobs, setAvailableJobs] = useState<{ id: string, store: string, type: string, payout: number, dist: string, desc: string }[]>([]);
 
   // Available Shifts
-  const [availableShifts, setAvailableShifts] = useState([
-    { id: 'SH-501', store: 'Heladerías Duomo', hours: 4, pay: 14000, time: 'Tarde (14:00 - 18:00)', date: 'Hoy' },
-    { id: 'SH-502', store: 'Ferretería El Bulón', hours: 8, pay: 25000, time: 'Completo (09:00 - 17:00)', date: 'Mañana' },
-    { id: 'SH-503', store: 'Panadería Trigo Dorado', hours: 4, pay: 14000, time: 'Mañana (08:00 - 12:00)', date: 'Mañana' },
-  ]);
+  const [availableShifts, setAvailableShifts] = useState<{ id: string, store: string, hours: number, pay: number, time: string, date: string }[]>([]);
 
   // Wallet
-  const [walletBalance, setWalletBalance] = useState<number>(repartidor.gananciasSemanales || 28400);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   const [withdrawalPending, setWithdrawalPending] = useState<boolean>(false);
   const [withdrawalToast, setWithdrawalToast] = useState<boolean>(false);
 
   // Driver ranking board (Stars of the Month)
-  const rankingList = [
-    { pos: 1, name: 'Esteban "Rayo" Silva', points: 4850, Deliveries: 142, rating: 4.98 },
-    { pos: 2, name: 'Facundo Rossi', points: 4200, Deliveries: 120, rating: 4.95 },
-    { pos: 3, name: 'María Agustina Ramos', points: 3950, Deliveries: 115, rating: 4.92 },
-    { pos: 4, name: 'Carlos Giménez (Vos)', points: 3840, Deliveries: 110, rating: 4.89 },
-    { pos: 5, name: 'Leandro Pereira', points: 3200, Deliveries: 98, rating: 4.75 },
-  ];
+  const rankingList: { pos: number, name: string, points: number, Deliveries: number, rating: number }[] = [];
 
   const handleSaveProfile = () => {
     setProfileSaved(true);

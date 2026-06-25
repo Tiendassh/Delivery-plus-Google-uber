@@ -18,7 +18,6 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { notificationService } from '../services/notificationService';
-import { mockApi } from '../services/mockApi';
 import { Transaccion } from '../types';
 import { GoogleGenAI } from "@google/genai";
 import { BrandWatermark } from './BrandComponents';
@@ -34,43 +33,36 @@ const WalletView: React.FC = () => {
 
   // States for Billetera Delivery Plus Flow Simulation
   const [escrowStep, setEscrowStep] = useState(1);
-  const [escrowAmount, setEscrowAmount] = useState(4800);
-  const [escrowDetail, setEscrowDetail] = useState('Pedido #1004 - Hamburguesas Posadas');
+  const [escrowAmount, setEscrowAmount] = useState(0);
+  const [escrowDetail, setEscrowDetail] = useState('');
   const [isSimulatingEscrow, setIsSimulatingEscrow] = useState(false);
 
   // States for Billetera Repartidor
-  const [riderBalancePending, setRiderBalancePending] = useState(12800);
-  const [riderBalanceAvailable, setRiderBalanceAvailable] = useState(42600);
-  const [riderEarningsDaily, setRiderEarningsDaily] = useState(9405);
-  const [riderEarningsWeekly, setRiderEarningsWeekly] = useState(54800);
-  const [riderEarningsMonthly, setRiderEarningsMonthly] = useState(215000);
+  const [riderBalancePending, setRiderBalancePending] = useState(0);
+  const [riderBalanceAvailable, setRiderBalanceAvailable] = useState(0);
+  const [riderEarningsDaily, setRiderEarningsDaily] = useState(0);
+  const [riderEarningsWeekly, setRiderEarningsWeekly] = useState(0);
+  const [riderEarningsMonthly, setRiderEarningsMonthly] = useState(0);
   
   // Withdraw States (Repartidor)
   const [withdrawMethod, setWithdrawMethod] = useState<'mp' | 'cvu' | 'cbu'>('mp');
   const [withdrawVal, setWithdrawVal] = useState<string>('');
-  const [withdrawDest, setWithdrawDest] = useState<string>('alias.mp.ramiro.tech');
+  const [withdrawDest, setWithdrawDest] = useState<string>('');
   const [withdrawError, setWithdrawError] = useState('');
 
   // States for Billetera Comercio
-  const [storeBalanceAvailable, setStoreBalanceAvailable] = useState(185000);
-  const [storeExpenses, setStoreExpenses] = useState(24000); 
+  const [storeBalanceAvailable, setStoreBalanceAvailable] = useState(0);
+  const [storeExpenses, setStoreExpenses] = useState(0); 
 
   // States for Billetera Administrador
-  const [adminCommissions, setAdminCommissions] = useState(47800);
-  const [adminHeldFunds, setAdminHeldFunds] = useState(18900);
-  const [adminReleasedFunds, setAdminReleasedFunds] = useState(684500);
-  const [adminAlerts, setAdminAlerts] = useState([
-    { id: '1', type: 'critical', msg: 'Ramiro Tech solicitó extracción sin DNI biométrico verificado.' },
-    { id: '2', type: 'warning', msg: 'CUIT de "Fiambrería El Galpón" reporta inconsistencia física ante AFIP.' },
-    { id: '3', type: 'notice', msg: 'Comisiones acumuladas superaron el margen semanal establecido del 12%.' }
-  ]);
+  const [adminCommissions, setAdminCommissions] = useState(0);
+  const [adminHeldFunds, setAdminHeldFunds] = useState(0);
+  const [adminReleasedFunds, setAdminReleasedFunds] = useState(0);
+  const [adminAlerts, setAdminAlerts] = useState<{ id: string, type: string, msg: string }[]>([]);
 
   // Loading initial transactions and triggering Gemini insight
   const fetchFinanceData = async () => {
     try {
-      const txs = await mockApi.getTransactions();
-      setTransactions(txs);
-      
       const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
       if (apiKey) {
         const ai = new GoogleGenAI({ apiKey });
@@ -98,6 +90,17 @@ const WalletView: React.FC = () => {
   useEffect(() => {
     fetchFinanceData();
   }, []);
+
+  const addLocalTransaction = (txData: any) => {
+    const newTx: Transaccion = {
+      id: `TX-${Math.floor(1000 + Math.random() * 9000)}`,
+      monto: txData.monto,
+      tipo: txData.tipo,
+      detalle: txData.detalle,
+      fecha: new Date().toISOString()
+    };
+    setTransactions(prev => [newTx, ...prev]);
+  };
 
   // Simulating the Delivery Plus Escrow Flow step-by-step
   const handleNextEscrowStep = () => {
@@ -128,11 +131,12 @@ const WalletView: React.FC = () => {
       setAdminReleasedFunds(prev => prev + escrowAmount);
       setRiderBalanceAvailable(prev => prev + riderNet);
       
-      mockApi.addTransaction({
+      addLocalTransaction({
         monto: riderNet,
         tipo: 'GANANCIA_CHOFER',
         detalle: `Pago Liberado: ${escrowDetail}`
-      }).then(() => fetchFinanceData());
+      });
+      fetchFinanceData();
 
       notificationService.playAlert('success');
       notificationService.notify('Fondos Distribuidos', `Comisión: $${commission} (Plataforma), Ganancia Rider: $${riderNet} (Disponible).`);
@@ -166,11 +170,12 @@ const WalletView: React.FC = () => {
         setAdminReleasedFunds(prev => prev + escrowAmount);
         setRiderBalanceAvailable(prev => prev + riderNet);
         
-        mockApi.addTransaction({
+        addLocalTransaction({
           monto: riderNet,
           tipo: 'GANANCIA_CHOFER',
           detalle: `Ciclo Completado: ${escrowDetail}`
-        }).then(() => fetchFinanceData());
+        });
+        fetchFinanceData();
 
         notificationService.playAlert('success');
         notificationService.notify('Distribución Exitosa', 'Fondos acreditados al Rider con liberación de comisión.');
@@ -205,7 +210,7 @@ const WalletView: React.FC = () => {
       setRiderBalanceAvailable(prev => prev - amt);
       const labelMap = { mp: 'Mercado Pago', cvu: 'Cuenta Digital CVU', cbu: 'Cuenta Bancaria CBU' };
       
-      await mockApi.addTransaction({
+      addLocalTransaction({
         monto: -amt,
         tipo: 'RETIRO',
         detalle: `Retiro (${labelMap[withdrawMethod]}) a ${withdrawDest}`
@@ -234,7 +239,7 @@ const WalletView: React.FC = () => {
       setStoreBalanceAvailable(prev => prev + storeNet);
       setAdminCommissions(prev => prev + commishFee);
 
-      await mockApi.addTransaction({
+      addLocalTransaction({
         monto: storeNet,
         tipo: 'ENVIO',
         detalle: `Venta Comercial - Cliente Delivery Plus`
@@ -252,7 +257,7 @@ const WalletView: React.FC = () => {
       setStoreExpenses(prev => prev + expenseAmt);
       setAdminReleasedFunds(prev => prev + expenseAmt);
 
-      await mockApi.addTransaction({
+      addLocalTransaction({
         monto: -expenseAmt,
         tipo: 'MEMBRESIA_PAQUETERIA',
         detalle: 'Compra de Kit Profesional / Publicidad Oro'

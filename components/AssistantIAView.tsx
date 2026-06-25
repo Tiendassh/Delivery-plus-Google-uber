@@ -10,7 +10,7 @@ interface Message {
   time: string;
 }
 
-type IARole = 'COMERCIO' | 'EMPRENDEDOR' | 'REPARTIDOR';
+type IARole = 'COMERCIO' | 'EMPRENDEDOR' | 'REPARTIDOR' | 'ADMINISTRADOR';
 type VoiceType = 'valentina' | 'mateo';
 
 export const AssistantIAView: React.FC = () => {
@@ -28,7 +28,8 @@ export const AssistantIAView: React.FC = () => {
   const initMessages = {
     COMERCIO: "Hola. Soy Valentina, tu Asesora Comercial de Delivery Plus. ¿En qué te puedo ayudar hoy con respecto a tus turnos, dudas o la creación de un nuevo pedido?",
     EMPRENDEDOR: "¡Hola! Soy Valentina, tu Asistente de Envíos. Estoy acá para ayudarte a armar tus pedidos y explicarte cómo funciona nuestra logística. ¿Qué necesitas enviar hoy?",
-    REPARTIDOR: "¡Buenas! Soy Mateo, tu copiloto logístico. Estoy listo para asistirte en el turno. ¿Cómo arrancamos?"
+    REPARTIDOR: "¡Buenas! Soy Mateo, tu copiloto logístico. Estoy listo para asistirte en el turno. ¿Cómo arrancamos?",
+    ADMINISTRADOR: "Saludos. Soy el núcleo de IA Administrativa. Estoy a tu disposición para auditar KPIs globales, gestionar seguridad y la supervisión del centro de operaciones."
   };
 
   useEffect(() => {
@@ -151,9 +152,10 @@ export const AssistantIAView: React.FC = () => {
         ${driverModeInstruction}
         
         OBJETIVOS DE ROL [${activeRole}]:
-        ${activeRole === 'COMERCIO' ? 'Asesor comercial para comercios de Misiones. No inventar precios ni políticas.' : ''}
-        ${activeRole === 'EMPRENDEDOR' ? 'Asistente para envíos y emprendedores. Ayudar a despachar.' : ''}
-        ${activeRole === 'REPARTIDOR' ? 'Copiloto logístico de repartidores. Explicar niveles, optimización.' : ''}
+        ${activeRole === 'COMERCIO' ? 'Asesor comercial para comercios. Fomentar IA comercial y estadísticas.' : ''}
+        ${activeRole === 'EMPRENDEDOR' ? 'Asistente para envíos y emprendedores. Apoyar en despachos y logística.' : ''}
+        ${activeRole === 'REPARTIDOR' ? 'Copiloto logístico de repartidores. Fomentar seguridad operativa, ganancias y navegación.' : ''}
+        ${activeRole === 'ADMINISTRADOR' ? 'IA Administrativa. Centro de operaciones, KPIs, seguridad y auditorías globales.' : ''}
       `;
 
       const conversationHistory = [...messages.slice(-6), userMsg];
@@ -220,7 +222,7 @@ export const AssistantIAView: React.FC = () => {
            <div>
              <p className="text-[9px] font-black uppercase text-dp-textMuted tracking-widest mb-2">Rol Operativo</p>
              <div className="grid grid-cols-1 gap-2">
-               {(['COMERCIO', 'EMPRENDEDOR', 'REPARTIDOR'] as IARole[]).map(r => (
+               {(['COMERCIO', 'EMPRENDEDOR', 'REPARTIDOR', 'ADMINISTRADOR'] as IARole[]).map(r => (
                  <button 
                    key={r}
                    onClick={() => setActiveRole(r)}

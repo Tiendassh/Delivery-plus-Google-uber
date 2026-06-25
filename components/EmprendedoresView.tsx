@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
-import { mockApi } from '../services/mockApi';
 import { SocioRepartidor, EstadoPedido, Pedido } from '../types';
 import InteractiveMap from './InteractiveMap';
 import { notificationService } from '../services/notificationService';
@@ -59,10 +58,10 @@ const EmprendedoresView: React.FC = () => {
 
   useEffect(() => {
     const fetchAndLoad = async () => {
-      const d = await mockApi.getDrivers();
+      const d = await apiService.getDrivers();
       setDrivers(d.filter(r => r.etapaIngreso === 'ACTIVO'));
 
-      const o = await mockApi.getOrders();
+      const o = await apiService.fetchOrders();
       // Filtrar sólo pedidos de tipo PAQUETERIA creados recientemente
       setActiveOrders(o.filter(p => p.detalles.includes('Emprendedor') || (p as any).tipoEntrega === 'PAQUETERIA'));
     };
@@ -132,7 +131,7 @@ const EmprendedoresView: React.FC = () => {
           voiceService.speak(audioText, narratorVoice);
 
           // Actualizar en el historial
-          mockApi.getOrders().then(o => {
+          apiService.fetchOrders().then(o => {
             setActiveOrders(o.filter(p => p.detalles.includes('Emprendedor') || (p as any).tipoEntrega === 'PAQUETERIA'));
           });
         }
@@ -173,13 +172,6 @@ const EmprendedoresView: React.FC = () => {
     // Registrar pedido en la base
     const registeredOrder = await apiService.createOrder(newOrderPayload);
 
-    // Agregar cobro/gasto en transacciones de la billetera
-    mockApi.addTransaction({
-      monto: -price,
-      tipo: 'ENVIO',
-      detalle: `Envío unitario: ${clientName} (${selectedGeo.name})`
-    });
-
     const triggerAudio = `¡Perfecto, che! Ya pedimos tu flete exprés para ${clientName}. El chofer ${availableDriver ? availableDriver.nombre : 'de Delivery Plus'} va rumbo a tu casa.`;
     voiceService.speak(triggerAudio, narratorVoice);
 
@@ -188,8 +180,8 @@ const EmprendedoresView: React.FC = () => {
       setSimulationStep('GOING_TO_PICKUP');
       
       // Auto-aceptar pedido por el repartidor asignado
-      if (availableDriver) {
-        mockApi.updateOrderStatus(Number(registeredOrder.id), EstadoPedido.ACEPTADO);
+      if (availableDriver && registeredOrder) {
+        apiService.updateOrder(Number(registeredOrder.id), EstadoPedido.ACEPTADO);
       }
 
       notificationService.notify(
@@ -200,7 +192,7 @@ const EmprendedoresView: React.FC = () => {
       );
 
       // Recargar lista
-      mockApi.getOrders().then(o => {
+      apiService.fetchOrders().then(o => {
         setActiveOrders(o.filter(p => p.detalles.includes('Emprendedor') || (p as any).tipoEntrega === 'PAQUETERIA'));
       });
     }, 1500);

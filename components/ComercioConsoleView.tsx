@@ -34,18 +34,10 @@ export const ComercioConsoleView: React.FC<ComercioConsoleProps> = ({
   // Payments / Prepaid system
   const [balance, setBalance] = useState<number>(85400);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
-  const [invoiceList] = useState([
-    { id: 'FAC-4122', date: '15 Jun 2026', desc: 'Comisión mensual Plus', amount: 15400, status: 'PAGADO' },
-    { id: 'FAC-4123', date: '17 Jun 2026', desc: 'Suscripción Silver', amount: 8900, status: 'PAGADO' },
-    { id: 'FAC-4124', date: '18 Jun 2026', desc: 'Contrato Turno Exclusivo (4hs)', amount: 14000, status: 'PENDIENTE' },
-  ]);
+  const [invoiceList] = useState<{ id: string, date: string, desc: string, amount: number, status: string }[]>([]);
 
   // Past dispatches / Historial
-  const [historyOrders, setHistoryOrders] = useState([
-    { id: 'FLET-1102', client: 'Amalia Ortiz', date: 'Hoy', status: 'ENTREGADO', desc: 'Pedido de comida grande', price: 4200, rating: 5 },
-    { id: 'FLET-1103', client: 'Marcos Benítez', date: 'Ayer', status: 'ENTREGADO', desc: 'Paquete de ferretería', price: 3800, rating: 4 },
-    { id: 'FLET-1104', client: 'Javier Solís', date: '12 Jun 2026', status: 'DEVUELTO', desc: 'Caja frágil', price: 5500, rating: null },
-  ]);
+  const [historyOrders, setHistoryOrders] = useState<{ id: string, client: string, date: string, status: string, desc: string, price: number, rating: number | null }[]>([]);
 
   const handleCreateOrderSubmit = (e: React.FormEvent) => {
     e.preventDefault();

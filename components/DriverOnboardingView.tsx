@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
 import { GoogleGenAI } from "@google/genai";
 import { notificationService } from '../services/notificationService';
-import { mockApi } from '../services/mockApi';
 
 type VehicleType = 'bici' | 'moto' | 'auto' | 'furgon';
 
@@ -252,11 +251,7 @@ const DriverOnboardingView: React.FC = () => {
 
       // Registrar una transacción simulada por compra de kit si aplica
       if (paidKit) {
-        mockApi.addTransaction({
-          monto: -18000,
-          tipo: 'MEMBRESIA_PAQUETERIA',
-          detalle: `Kit Profesional Premium - Registro de ${formData.nombre}`
-        });
+        // En una implementación real, se registraría el pago del kit
       }
 
       setSuccess(true);

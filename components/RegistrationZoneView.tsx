@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { notificationService } from '../services/notificationService';
-import { mockApi } from '../services/mockApi';
 
 interface Props {
   setPestañaActiva: (pestaña: string) => void;
@@ -58,11 +57,6 @@ const RegistrationZoneView: React.FC<Props> = ({ setPestañaActiva }) => {
     setTimeout(() => {
       setBuying(false);
       setPurchased(true);
-      mockApi.addTransaction({
-        monto: -currentKit.price,
-        tipo: 'SUSCRIPCION',
-        detalle: `Compra de Uniformes Oficiales: ${currentKit.title}`
-      });
       notificationService.playAlert('success');
       notificationService.notify(
         "Compra de Uniforme Confirmada",

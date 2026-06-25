@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { mockApi } from '../services/mockApi';
+import { apiService } from '../services/apiService';
 import { SocioRepartidor, Comercio } from '../types';
 import InteractiveMap from './InteractiveMap';
 import { notificationService } from '../services/notificationService';
@@ -35,8 +35,8 @@ const ComerciosTurnosView: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const s = await mockApi.getStores();
-      const d = await mockApi.getDrivers();
+      const s = await apiService.getStores();
+      const d = await apiService.getDrivers();
       setStores(s);
       setDrivers(d.filter(rider => rider.etapaIngreso === 'ACTIVO'));
 
@@ -109,13 +109,6 @@ const ComerciosTurnosView: React.FC = () => {
       const updated = [newShift, ...contractedShifts];
       setContractedShifts(updated);
       localStorage.setItem('dp_contracted_shifts', JSON.stringify(updated));
-
-       // Agregar transacción en mockApi
-       mockApi.addTransaction({
-         monto: -priceCalculation,
-         tipo: 'VENTA_TURNO',
-         detalle: `Contrato de turno (${hours}hs) para ${storeObj.nombre}`
-       });
 
       const confirmText = `¡Listo, mirá! Contrataste la cobertura exclusiva de ${hours} horas para ${storeObj.nombre}. El repartidor ${driverObj.nombre} ya quedó asignado a tu local.`;
       voiceService.speak(confirmText, narratorVoice);

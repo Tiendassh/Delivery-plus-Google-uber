@@ -31,7 +31,7 @@ export const apiService = {
         if (error) throw error;
         return data as Pedido[];
       } catch (err: any) {
-        console.warn('Supabase fetchOrders failed (table may not exist), falling back to mock:', err.message);
+        console.warn('Supabase fetchOrders failed:', err.message);
       }
     }
 
@@ -48,8 +48,8 @@ export const apiService = {
         detalles: o.items?.map((i: any) => `${i.qty}x Art.`).join(', ') || "Sin detalles"
       }));
     } catch {
-      const { mockApi } = await import('./mockApi');
-      return mockApi.getOrders() as unknown as Promise<Pedido[]>;
+      // AGENTS.md RULE: No mock data. Show empty state.
+      return [];
     }
   },
 
@@ -60,8 +60,7 @@ export const apiService = {
       });
       return await res.json();
     } catch {
-      const { mockApi } = await import('./mockApi');
-      return mockApi.assignOrder(Number(orderId), Number(driverId));
+      return { success: false, error: 'No connection' };
     }
   },
 
@@ -75,8 +74,7 @@ export const apiService = {
       const res = await fetchWithTimeout(endpoint, { method: 'POST' });
       return res.ok ? await res.json() : { error: "API_ERROR" };
     } catch {
-      const { mockApi } = await import('./mockApi');
-      return mockApi.updateOrderStatus(Number(orderId), status);
+      return { success: false, error: 'No connection' };
     }
   },
 
@@ -86,7 +84,7 @@ export const apiService = {
       if (!res.ok) throw new Error();
       return await res.json();
     } catch {
-      return { temp: 22, rainProb: 10, wind: 5, summary: "Operativa Estable" };
+      return { temp: 0, rainProb: 0, wind: 0, summary: "Datos no disponibles" };
     }
   },
 
@@ -105,8 +103,8 @@ export const apiService = {
       const res = await fetchWithTimeout(`${API_BASE_URL}/api/v1/drivers`);
       return await res.json();
     } catch {
-      const { mockApi } = await import('./mockApi');
-      return mockApi.getDeliveries() as unknown as Promise<SocioRepartidor[]>;
+      // AGENTS.md RULE: No mock data.
+      return [];
     }
   },
 
@@ -125,8 +123,8 @@ export const apiService = {
       const res = await fetchWithTimeout(`${API_BASE_URL}/api/v1/stores`);
       return await res.json();
     } catch {
-      const { mockApi } = await import('./mockApi');
-      return mockApi.getStores() as unknown as Promise<Comercio[]>;
+      // AGENTS.md RULE: No mock data.
+      return [];
     }
   },
 
@@ -139,8 +137,7 @@ export const apiService = {
       });
       return await res.json();
     } catch {
-      const { mockApi } = await import('./mockApi');
-      return mockApi.registerDriver(data);
+      return { success: false };
     }
   },
 
@@ -153,8 +150,20 @@ export const apiService = {
       });
       return await res.json();
     } catch {
-      const { mockApi } = await import('./mockApi');
-      return mockApi.createOrder(data);
+      return { success: false };
+    }
+  },
+
+  async registerStore(data: any) {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE_URL}/api/v1/stores`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return await res.json();
+    } catch {
+      return { success: false };
     }
   }
 };

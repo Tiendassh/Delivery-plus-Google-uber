@@ -7,19 +7,7 @@ const WA_PHONE_NUMBER_ID = process.env.WA_PHONE_NUMBER_ID;
 export const whatsappService = {
   getSessions: async (): Promise<SesionWhatsApp[]> => {
     // Aquí conectarías con tu backend del VPS que almacena las sesiones de WhatsApp
-    return import('./mockApi').then(() => [
-      {
-        id: 'wa-prod-1',
-        nombreCliente: 'Comercio en Espera',
-        telefonoCliente: '+549...',
-        ultimoMensaje: 'Hola, quiero información de los planes.',
-        estado: 'IA_VENDEDOR',
-        esPremium: false,
-        interes: 'CONTRATO_NUEVO',
-        tiempoEsperaMinutos: 0,
-        historial: []
-      }
-    ]);
+    return [];
   },
 
   sendMessage: async (phone: string, text: string) => {

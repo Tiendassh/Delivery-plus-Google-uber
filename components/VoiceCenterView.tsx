@@ -51,7 +51,7 @@ export const VoiceCenterView: React.FC<VoiceCenterProps> = ({ activeRole }) => {
               <h1 className="text-3xl font-poppins font-bold text-dp-text tracking-tight">Voice Center</h1>
             </div>
             <p className="text-dp-textMuted max-w-lg">
-              Plataforma de síntesis de voz inteligente. Configura tu copiloto logístico impulsado por ElevenLabs.
+              Plataforma de síntesis de voz inteligente. Configura tu copiloto logístico impulsado por Kokoro TTS y Piper (Fallback).
             </p>
           </div>
           

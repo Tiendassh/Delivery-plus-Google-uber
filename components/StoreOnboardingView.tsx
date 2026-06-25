@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { mockApi } from '../services/mockApi';
 import { apiService } from '../services/apiService';
 import { notificationService } from '../services/notificationService';
 import { PlanComercio, ChatRoom } from '../types';
@@ -224,8 +223,8 @@ const StoreOnboardingView: React.FC = () => {
       const cuitRegistro = selectedType === 'comercio' ? form.cuit : `DNI-${form.dni}`;
       const categoriaRes = selectedType === 'comercio' ? form.categoria : 'Emprendimiento / Artesanal';
 
-      // Llamar al mockApi para registrar la tienda o afiliado
-      await mockApi.registerStore({
+      // Llamar al apiService para registrar la tienda o afiliado
+      await apiService.registerStore({
         nombre: nombreRegistro,
         categoria: categoriaRes,
         plan: selectedType === 'comercio' ? form.plan : PlanComercio.BRONCE,

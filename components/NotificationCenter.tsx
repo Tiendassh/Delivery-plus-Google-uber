@@ -5,12 +5,7 @@ import { BrandWatermark, BrandAvatar } from './BrandComponents';
 export const NotificationCenter: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'ALL' | 'UNREAD'>('ALL');
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: 'SUCCESS', title: 'Pedido Entregado', msg: 'El pedido #FLET-1102 fue entregado con éxito a Amalia Ortiz.', time: 'Hace 2 min', read: false },
-    { id: 2, type: 'WARNING', title: 'Alta Demanda', msg: 'Zonas céntricas con alta demanda. Aprovechá tarifas dinámicas.', time: 'Hace 15 min', read: false },
-    { id: 3, type: 'INFO', title: 'Nuevo mensaje de soporte', msg: 'Tenés una respuesta a tu ticket de ayer.', time: 'Hace 2 hs', read: true },
-    { id: 4, type: 'DANGER', title: 'Alerta Operativa', msg: 'Precaución: Lluvia fuerte en zona sur.', time: 'Hace 3 hs', read: true }
-  ]);
+  const [notifications, setNotifications] = useState<{ id: number, type: string, title: string, msg: string, time: string, read: boolean }[]>([]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

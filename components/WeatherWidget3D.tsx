@@ -5,23 +5,60 @@ export const WeatherWidget3D: React.FC = () => {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    // Simulate real weather data for Posadas, Misiones
-    setData({
-      temp: 24,
-      feelsLike: 27,
-      condition: 'Tormentas Aisladas',
-      humidity: '82%',
-      wind: '14 km/h',
-      rainProb: '65%',
-      icon: 'rain',
-      forecast: [
-        { day: 'Hoy', temp: 24, min: 20, rain: '65%', icon: 'rain' },
-        { day: 'Mañana', temp: 28, min: 22, rain: '20%', icon: 'cloud' },
-        { day: 'Mié', temp: 31, min: 23, rain: '10%', icon: 'sun' },
-        { day: 'Jue', temp: 33, min: 25, rain: '0%', icon: 'sun' },
-        { day: 'Vie', temp: 30, min: 24, rain: '40%', icon: 'cloud' },
-      ]
-    });
+    const fetchWeather = async () => {
+      try {
+        // Fetch real weather data using Open-Meteo (No API key required)
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-27.3671&longitude=-55.8961&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FSao_Paulo');
+        const json = await res.json();
+
+        if (json.current) {
+          const mapWeatherCode = (code: number, isDay: number) => {
+             // Basic mapping for Open-Meteo WMO codes
+             if (code === 0) return isDay ? 'sun' : 'moon';
+             if (code >= 1 && code <= 3) return 'cloud';
+             if (code >= 51 && code <= 99) return 'rain';
+             return 'cloud';
+          };
+          
+          const conditionText = (code: number) => {
+             if (code === 0) return 'Despejado';
+             if (code >= 1 && code <= 3) return 'Nublado';
+             if (code >= 51 && code <= 69) return 'Llovizna';
+             if (code >= 70 && code <= 79) return 'Nieve';
+             if (code >= 80 && code <= 82) return 'Lluvia';
+             if (code >= 95 && code <= 99) return 'Tormenta';
+             return 'Variable';
+          };
+
+          const forecastDays = json.daily.time.slice(0, 5).map((dateStr: string, idx: number) => {
+             const date = new Date(dateStr + "T00:00:00");
+             const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+             return {
+                day: idx === 0 ? 'Hoy' : idx === 1 ? 'Mañana' : days[date.getDay()],
+                temp: Math.round(json.daily.temperature_2m_max[idx]),
+                min: Math.round(json.daily.temperature_2m_min[idx]),
+                rain: `${json.daily.precipitation_probability_max[idx]}%`,
+                icon: mapWeatherCode(json.daily.weather_code[idx], 1)
+             };
+          });
+
+          setData({
+            temp: Math.round(json.current.temperature_2m),
+            feelsLike: Math.round(json.current.apparent_temperature),
+            condition: conditionText(json.current.weather_code),
+            humidity: `${json.current.relative_humidity_2m}%`,
+            wind: `${Math.round(json.current.wind_speed_10m)} km/h`,
+            rainProb: `${json.daily.precipitation_probability_max[0]}%`,
+            icon: mapWeatherCode(json.current.weather_code, json.current.is_day),
+            forecast: forecastDays
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch weather data", err);
+      }
+    };
+    
+    fetchWeather();
   }, []);
 
   if (!data) return <div className="h-64 bg-dp-surfaceLight animate-pulse rounded-[2rem]" />;

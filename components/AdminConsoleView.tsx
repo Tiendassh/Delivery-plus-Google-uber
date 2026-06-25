@@ -27,19 +27,10 @@ export const AdminConsoleView: React.FC<AdminConsoleProps> = ({ pedidos, reparti
   const [commissionSaved, setCommissionSaved] = useState<boolean>(false);
 
   // Wallets management
-  const [wallets, setWallets] = useState([
-    { id: 'W1', holder: 'Carlos Giménez (Chofer)', type: 'REPARTIDOR', balance: 48500, pendingCashout: 12000, status: 'PENDIENTE' },
-    { id: 'W2', holder: 'María Agustina Ramos (Chofer)', type: 'REPARTIDOR', balance: 74200, pendingCashout: 25000, status: 'PENDIENTE' },
-    { id: 'W3', holder: 'Pizzería La Estación', type: 'COMERCIO', balance: -4500, pendingCashout: 0, status: 'AL_DIA' },
-    { id: 'W4', holder: 'La Trattoria Posadas', type: 'COMERCIO', balance: 112000, pendingCashout: 0, status: 'AL_DIA' },
-  ]);
+  const [wallets, setWallets] = useState<{ id: string, holder: string, type: string, balance: number, pendingCashout: number, status: string }[]>([]);
 
   // Incidents management
-  const [incidents, setIncidents] = useState([
-    { id: 'INC-702', orderId: '#6412', driver: 'Carlos Giménez', desc: 'Pinchadura de rueda trasera en Av. Costanera', severity: 'ALTA', status: 'CRIADO' },
-    { id: 'INC-703', orderId: '#6415', driver: 'Agustin S.', desc: 'Demora prolongada en local comercial de comidas', severity: 'MEDIA', status: 'CRIADO' },
-    { id: 'INC-704', orderId: '#6419', driver: 'Mariano K.', desc: 'Dirección del cliente no aparece en mapa principal', severity: 'BAJA', status: 'RESUELTO' },
-  ]);
+  const [incidents, setIncidents] = useState<{ id: string, orderId: string, driver: string, desc: string, severity: string, status: string }[]>([]);
 
   // Special hours config
   const [isHolidayMode, setIsHolidayMode] = useState<boolean>(false);

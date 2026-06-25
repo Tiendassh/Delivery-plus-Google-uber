@@ -26,19 +26,11 @@ export const EmprendedorConsoleView: React.FC<EmprendedorConsoleProps> = ({
   const [createdToast, setCreatedToast] = useState(false);
 
   // Past shipments / Historial
-  const [shipments, setShipments] = useState([
-    { id: 'ENV-3910', recipient: 'Diana Maidana', date: 'Hoy', desc: 'Decoración de cerámica fragil', size: 'MEDIANO', status: 'CRIADO', price: 4200 },
-    { id: 'ENV-3911', recipient: 'Rodrigo Cáceres', date: 'Ayer', desc: 'Prenda de ropa con caja', size: 'CHICO', status: 'ENTREGADO', price: 3100 },
-    { id: 'ENV-3912', recipient: 'Estudio Jurídico Posadas', date: '10 Jun 2026', desc: 'Sobres de documentación notarial', size: 'CHICO', status: 'ENTREGADO', price: 3100 },
-  ]);
+  const [shipments, setShipments] = useState<{ id: string, recipient: string, date: string, desc: string, size: string, status: string, price: number }[]>([]);
 
   // Payments / Saldos simple
-  const [walletBalance, setWalletBalance] = useState<number>(12300);
-  const [paymentsHistory] = useState([
-    { id: 'PAY-891', date: 'Hoy', type: 'COBRO_ENVIO', desc: 'Despacho Diana Maidana', amount: -4200, status: 'DEBITADO' },
-    { id: 'PAY-892', date: 'Ayer', type: 'COBRO_ENVIO', desc: 'Despacho Rodrigo Cáceres', amount: -3100, status: 'DEBITADO' },
-    { id: 'PAY-893', date: '08 Jun 2026', type: 'RECARGA_CUENTA', desc: 'Depósito a través de Mercado Pago', amount: 15000, status: 'CREDITADO' },
-  ]);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [paymentsHistory] = useState<{ id: string, date: string, type: string, desc: string, amount: number, status: string }[]>([]);
 
   const handleSizeChange = (size: 'CHICO' | 'MEDIANO' | 'GRANDE') => {
     setParcelSize(size);
